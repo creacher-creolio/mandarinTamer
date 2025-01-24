@@ -1,0 +1,42 @@
+# Pycharm
+.idea/*
+
+# VSCode
+.vscode/*
+!.vscode/extensions.json
+!.vscode/oneline_sphinx_mod.mustache
+# Live Share
+.vsls.json
+
+# Obsidian
+/docs/.obsidian
+
+# Virtual Environments
+venv/
+.venv/
+env/
+# Pipenv
+Pipfile
+Pipfile.lock
+
+# Environment Variables
+.env
+.envs/
+.envs/*
+# Google Creds
+google-credentials.json
+
+# Caches
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage/
+
+# Project-specific
+tests/
+useful_functions/
