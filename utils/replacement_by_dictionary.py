@@ -33,6 +33,26 @@ class ReplacementUtils:
         )
 
     @staticmethod
+    def get_indexes_to_protect_from_list(
+        sentence: str, dictionary: dict
+    ) -> list[tuple[int, int]]:
+        indexes_to_protect = []
+        for phrase in dictionary.keys():
+            start = 0
+            while (start := sentence.find(phrase, start)) != -1:
+                end = start + len(phrase)
+                indexes_to_protect.append((start, end))
+                start = end
+        for phrase in dictionary.values():
+            start = 0
+            while (start := sentence.find(phrase, start)) != -1:
+                end = start + len(phrase)
+                indexes_to_protect.append((start, end))
+                start = end
+        indexes_to_protect = list(set(indexes_to_protect))
+        return indexes_to_protect
+
+    @staticmethod
     def _get_phrases_to_skip_from_list(
         phrases: list[str], dictionary: dict
     ) -> list[str]:
@@ -77,3 +97,13 @@ class ReplacementUtils:
             if phrase in dictionary:
                 sentence = sentence.replace(phrase, dictionary[phrase])
         return sentence
+
+    @staticmethod
+    def revert_protected_indexes(
+        sentence: str, new_sentence: str, indexes_to_protect: list[tuple[int, int]]
+    ) -> str:
+        for start, end in indexes_to_protect:
+            new_sentence = (
+                new_sentence[:start] + sentence[start:end] + new_sentence[end:]
+            )
+        return new_sentence
