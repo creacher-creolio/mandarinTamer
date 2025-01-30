@@ -14,7 +14,7 @@ from utils.open_ai_prompts import (
 from utils.replacement_by_dictionary import ReplacementUtils
 
 
-class CustomTransliterationDictionaries:
+class CustomScriptConversionDictionaries:
     def __init__(self, include_dicts=None, exclude_lists=None):
         self.include_dicts = include_dicts or {}
         self.exclude_lists = exclude_lists or {}
@@ -135,7 +135,7 @@ class CustomTransliterationDictionaries:
         return merged_dict
 
 
-class CustomTransliteration(CustomTransliterationDictionaries):
+class CustomScriptConversion(CustomScriptConversionDictionaries):
     def modernize_simplified(
         self,
         sentence: str,
@@ -314,7 +314,7 @@ class CustomTransliteration(CustomTransliterationDictionaries):
         return merged_dict
 
 
-class ToTwTradTransliteration(CustomTransliteration):
+class ToTwTradScriptConversion(CustomScriptConversion):
     def traditionalize_phrases(
         self,
         sentence: str,
@@ -476,7 +476,7 @@ class ToTwTradTransliteration(CustomTransliteration):
         return "".join(sentence_parts)
 
 
-class ToSimpTransliteration(CustomTransliteration):
+class ToSimpScriptConversion(CustomScriptConversion):
     def detaiwanize_phrases(
         self,
         sentence: str,
@@ -644,7 +644,7 @@ class ToSimpTransliteration(CustomTransliteration):
         return "".join(sentence_parts)
 
 
-def custom_transliteration(
+def custom_script_conversion(
     orig_sentence: str,
     target_script: str = "",
     improved_one_to_many: bool = False,
@@ -652,9 +652,9 @@ def custom_transliteration(
     exclude_lists: dict | None = None,
 ) -> str:
     if target_script == "2twtrad":
-        return ToTwTradTransliteration(include_dicts, exclude_lists).custom_to_tw_trad(
+        return ToTwTradScriptConversion(include_dicts, exclude_lists).custom_to_tw_trad(
             orig_sentence, improved_one_to_many
         )
-    return ToSimpTransliteration(include_dicts, exclude_lists).custom_to_simp(
+    return ToSimpScriptConversion(include_dicts, exclude_lists).custom_to_simp(
         orig_sentence, improved_one_to_many
     )
