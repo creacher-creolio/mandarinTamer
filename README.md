@@ -23,7 +23,30 @@ It also offers:
 
 Traditional conversion tools often fail to capture the nuances of regional variants like Taiwanese Traditional Chinese or struggle with rare or outdated terms. MandarinTamer is designed to be a versatile tool for anyone in the Chinese linguistics field—whether you're a professor, translator, teacher, developer, or researcher—offering precision and flexibility for various applications, from localization to language education.
 
-## Attribution  
+## Get Started  
+
+To get started with MandarinTamer, simply install the package via pip:
+
+```bash
+pip install mandarinTamer
+```
+
+Once installed, you can use it to convert text to Simplified or Taiwanese Traditional Mandarin with a few lines of code. Here’s a quick example:
+
+```python
+from mandarinTamer import convert
+
+mandarin_text = "简体字"
+traditional_text = convert(mandarin_text, target_script="traditional_taiwan")
+print(traditional_text)
+```
+
+### Original Developers
+
+- **Jon Knebel** (Virginia, USA) – Full stack engineer + language educator + independent researcher of linguistics and language learning psychology.
+- **Valeriu Celmare** (Romania) – Full stack engineer with a focus on Django and Python.
+
+## Contributors  
 
 The dictionaries powering MandarinTamer have been made highly accurate for the top 10,000 Mandarin words, thanks to the contributions of professional translators from Taiwan, Hong Kong, and Mainland China. Special thanks to the following individuals for their valuable work in curating and verifying the dictionaries that power the tool:
 

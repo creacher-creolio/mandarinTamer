@@ -1,8 +1,8 @@
 # ruff: noqa: FBT001, FBT002
 import sys
 from pathlib import Path
-from opencc import OpenCC
 
+from opencc import OpenCC
 
 sys.path.append("..")
 from utils.file_conversion import FileConversion
@@ -14,7 +14,7 @@ from utils.open_ai_prompts import (
 from utils.replacement_by_dictionary import ReplacementUtils
 
 
-class CustomTransliterationDictionaries:
+class CustomScriptConversionDictionaries:
     def __init__(self, include_dicts=None, exclude_lists=None):
         self.include_dicts = include_dicts or {}
         self.exclude_lists = exclude_lists or {}
@@ -116,9 +116,7 @@ class CustomTransliterationDictionaries:
         )
 
     def load_dict(self, filename: str) -> dict:
-        return FileConversion.json_to_dict(
-            Path(f"../conversion_dictionaries/{filename}")
-        )
+        return FileConversion.json_to_dict(Path(f"../conversion_dictionaries/{filename}"))
 
     def _merge_dicts(
         self,
@@ -135,7 +133,7 @@ class CustomTransliterationDictionaries:
         return merged_dict
 
 
-class CustomTransliteration(CustomTransliterationDictionaries):
+class CustomScriptConversion(CustomScriptConversionDictionaries):
     def modernize_simplified(
         self,
         sentence: str,
@@ -145,15 +143,11 @@ class CustomTransliteration(CustomTransliterationDictionaries):
         # could also try using substring_replace_via_dictionary instead of char_replace_over_string
         phrases_replaced = ReplacementUtils.word_replace_over_string(
             sentence,
-            self._merge_dicts(
-                self.modernize_simp_phrase_dict, include_dict, exclude_list
-            ),
+            self._merge_dicts(self.modernize_simp_phrase_dict, include_dict, exclude_list),
         )
         return ReplacementUtils.char_replace_over_string(
             phrases_replaced,
-            self._merge_dicts(
-                self.modernize_simp_char_dict, include_dict, exclude_list
-            ),
+            self._merge_dicts(self.modernize_simp_char_dict, include_dict, exclude_list),
         )
 
     def modernize_simplified_list(
@@ -180,15 +174,11 @@ class CustomTransliteration(CustomTransliterationDictionaries):
     ) -> str:
         phrases_replaced = ReplacementUtils.word_replace_over_string(
             sentence,
-            self._merge_dicts(
-                self.merged_normalize_simp_char_dict, include_dict, exclude_list
-            ),
+            self._merge_dicts(self.merged_normalize_simp_char_dict, include_dict, exclude_list),
         )
         return ReplacementUtils.char_replace_over_string(
             phrases_replaced,
-            self._merge_dicts(
-                self.merged_normalize_simp_phrase_dict, include_dict, exclude_list
-            ),
+            self._merge_dicts(self.merged_normalize_simp_phrase_dict, include_dict, exclude_list),
         )
 
     def normalize_simplified_list(
@@ -208,12 +198,8 @@ class CustomTransliteration(CustomTransliterationDictionaries):
         )
 
     def modernize_traditional(self, sentence: str) -> str:
-        phrases_replaced = ReplacementUtils.word_replace_over_string(
-            sentence, self.merged_modernize_trad_phrase_dict
-        )
-        return ReplacementUtils.char_replace_over_string(
-            phrases_replaced, self.merged_modernize_trad_char_dict
-        )
+        phrases_replaced = ReplacementUtils.word_replace_over_string(sentence, self.merged_modernize_trad_phrase_dict)
+        return ReplacementUtils.char_replace_over_string(phrases_replaced, self.merged_modernize_trad_char_dict)
 
     def modernize_traditional_list(
         self,
@@ -235,12 +221,8 @@ class CustomTransliteration(CustomTransliterationDictionaries):
         self,
         sentence: str,
     ) -> str:
-        phrases_replaced = ReplacementUtils.word_replace_over_string(
-            sentence, self.merged_normalize_trad_phrase_dict
-        )
-        return ReplacementUtils.char_replace_over_string(
-            phrases_replaced, self.merged_normalize_trad_char_dict
-        )
+        phrases_replaced = ReplacementUtils.word_replace_over_string(sentence, self.merged_normalize_trad_phrase_dict)
+        return ReplacementUtils.char_replace_over_string(phrases_replaced, self.merged_normalize_trad_char_dict)
 
     def normalize_traditional_list(
         self,
@@ -271,12 +253,8 @@ class CustomTransliteration(CustomTransliterationDictionaries):
         phrase_dict = self._merge_dicts(phrase_dict, include_dict, exclude_list)
         for i, part in enumerate(sentence_parts):
             if part not in phrases_to_skip:
-                chars_replaced = ReplacementUtils.char_replace_over_string(
-                    part, char_dict
-                )
-                sentence_parts[i] = ReplacementUtils.word_replace_over_string(
-                    chars_replaced, phrase_dict
-                )
+                chars_replaced = ReplacementUtils.char_replace_over_string(part, char_dict)
+                sentence_parts[i] = ReplacementUtils.word_replace_over_string(chars_replaced, phrase_dict)
         return sentence_parts
 
     def _replace_over_list_with_sentence(
@@ -299,19 +277,13 @@ class CustomTransliteration(CustomTransliterationDictionaries):
         )
         return new_sentence
 
-    def map_one_to_many_openai(
-        self, string: str, mapping_dict: dict, openai_function
-    ) -> str:
+    def map_one_to_many_openai(self, string: str, mapping_dict: dict, openai_function) -> str:
         for char in mapping_dict:
             if char in string:
-                string = string.replace(
-                    char, openai_function(string, char, mapping_dict)
-                )
+                string = string.replace(char, openai_function(string, char, mapping_dict))
         return string
 
-    def map_one_to_many_opencc(
-        self, string: str, mapping_dict: dict, opencc_config: str
-    ) -> str:
+    def map_one_to_many_opencc(self, string: str, mapping_dict: dict, opencc_config: str) -> str:
         cc = OpenCC(opencc_config)
         cc_converted_sentence = cc.convert(string)
         for char in mapping_dict:
@@ -334,16 +306,14 @@ class CustomTransliteration(CustomTransliterationDictionaries):
         return merged_dict
 
 
-class ToTwTradTransliteration(CustomTransliteration):
+class ToTwTradScriptConversion(CustomScriptConversion):
     def traditionalize_phrases(
         self,
         sentence: str,
         include_dict: dict | None = None,
         exclude_list: list | None = None,
     ) -> str:
-        phrases_dict = self._merge_dicts(
-            self.s2t_phrases_dict, include_dict, exclude_list
-        )
+        phrases_dict = self._merge_dicts(self.s2t_phrases_dict, include_dict, exclude_list)
         return ReplacementUtils.word_replace_over_string(sentence, phrases_dict)
 
     def traditionalize_one_to_many(
@@ -399,9 +369,7 @@ class ToTwTradTransliteration(CustomTransliteration):
     ) -> tuple[list[str], list[str]]:
         phrases_to_skip: list[str] = []
         new_sentence_parts: list[str] = []
-        t2tw_phrases_dict = self._merge_dicts(
-            self.t2tw_phrases_dict, include_dict, exclude_list
-        )
+        t2tw_phrases_dict = self._merge_dicts(self.t2tw_phrases_dict, include_dict, exclude_list)
         for part in sentence_parts:
             new_part = part
             possible_part_phrases = ReplacementUtils.get_possible_sentence_phrases(part)
@@ -508,16 +476,14 @@ class ToTwTradTransliteration(CustomTransliteration):
         return sentence
 
 
-class ToSimpTransliteration(CustomTransliteration):
+class ToSimpScriptConversion(CustomScriptConversion):
     def detaiwanize_phrases(
         self,
         sentence: str,
         include_dict: dict | None = None,
         exclude_list: list | None = None,
     ) -> str:
-        phrases_dict = self._merge_dicts(
-            self.tw2t_phrases_dict, include_dict, exclude_list
-        )
+        phrases_dict = self._merge_dicts(self.tw2t_phrases_dict, include_dict, exclude_list)
         return ReplacementUtils.word_replace_over_string(sentence, phrases_dict)
 
     def detaiwanize_one_to_many(
@@ -536,9 +502,7 @@ class ToSimpTransliteration(CustomTransliteration):
                         part, amb_dict, openai_detaiwanize_ambiguous_mappings
                     )
                 else:
-                    sentence_parts[i] = self.map_one_to_many_opencc(
-                        part, amb_dict, "tw2sp"
-                    )
+                    sentence_parts[i] = self.map_one_to_many_opencc(part, amb_dict, "tw2sp")
         return sentence_parts
 
     def detaiwanize_characters(
@@ -553,9 +517,7 @@ class ToSimpTransliteration(CustomTransliteration):
             if part not in phrases_to_skip:
                 for char in part:
                     if char in chars_dict:
-                        sentence_parts[i] = sentence_parts[i].replace(
-                            char, chars_dict[char]
-                        )
+                        sentence_parts[i] = sentence_parts[i].replace(char, chars_dict[char])
         return sentence_parts
 
     def simplify_phrases(
@@ -566,9 +528,7 @@ class ToSimpTransliteration(CustomTransliteration):
     ) -> tuple[list[str], list[str]]:
         phrases_to_skip: list[str] = []
         new_sentence_parts: list[str] = []
-        t2s_phrases_dict = self._merge_dicts(
-            self.t2s_phrases_dict, include_dict, exclude_list
-        )
+        t2s_phrases_dict = self._merge_dicts(self.t2s_phrases_dict, include_dict, exclude_list)
         for part in sentence_parts:
             new_part = part
             possible_part_phrases = ReplacementUtils.get_possible_sentence_phrases(part)
@@ -589,13 +549,9 @@ class ToSimpTransliteration(CustomTransliteration):
         for i, part in enumerate(sentence_parts):
             if part not in phrases_to_skip:
                 if improved_one_to_many:
-                    sentence_parts[i] = self.map_one_to_many_openai(
-                        part, amb_dict, openai_t2s_ambiguous_mappings
-                    )
+                    sentence_parts[i] = self.map_one_to_many_openai(part, amb_dict, openai_t2s_ambiguous_mappings)
                 else:
-                    sentence_parts[i] = self.map_one_to_many_opencc(
-                        part, amb_dict, "tw2sp"
-                    )
+                    sentence_parts[i] = self.map_one_to_many_opencc(part, amb_dict, "tw2sp")
         return sentence_parts
 
     def simplify_characters(
@@ -608,9 +564,7 @@ class ToSimpTransliteration(CustomTransliteration):
             if part not in phrases_to_skip:
                 for char in chars_dict:
                     if char in part:
-                        sentence_parts[i] = sentence_parts[i].replace(
-                            char, chars_dict[char]
-                        )
+                        sentence_parts[i] = sentence_parts[i].replace(char, chars_dict[char])
         return sentence_parts
 
     """ Main Sub Function """
@@ -629,12 +583,8 @@ class ToSimpTransliteration(CustomTransliteration):
         sentence = self.normalize_traditional(sentence)
         sentence = self.detaiwanize_phrases(sentence)
 
-        phrases_to_skip = ReplacementUtils.get_phrases_to_skip(
-            sentence, self.tw2t_phrases_dict
-        )
-        sentence_parts = ReplacementUtils.split_sentence_by_phrases(
-            sentence, phrases_to_skip
-        )
+        phrases_to_skip = ReplacementUtils.get_phrases_to_skip(sentence, self.tw2t_phrases_dict)
+        sentence_parts = ReplacementUtils.split_sentence_by_phrases(sentence, phrases_to_skip)
 
         sentence_parts = self.detaiwanize_one_to_many(
             sentence_parts,
@@ -676,7 +626,7 @@ class ToSimpTransliteration(CustomTransliteration):
         return "".join(sentence_parts)
 
 
-def custom_transliteration(
+def custom_script_conversion(
     orig_sentence: str,
     target_script: str = "",
     improved_one_to_many: bool = False,
@@ -684,9 +634,7 @@ def custom_transliteration(
     exclude_lists: dict | None = None,
 ) -> str:
     if target_script == "2twtrad":
-        return ToTwTradTransliteration(include_dicts, exclude_lists).custom_to_tw_trad(
+        return ToTwTradScriptConversion(include_dicts, exclude_lists).custom_to_tw_trad(
             orig_sentence, improved_one_to_many
         )
-    return ToSimpTransliteration(include_dicts, exclude_lists).custom_to_simp(
-        orig_sentence, improved_one_to_many
-    )
+    return ToSimpScriptConversion(include_dicts, exclude_lists).custom_to_simp(orig_sentence, improved_one_to_many)
