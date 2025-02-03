@@ -270,8 +270,7 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
         phrase_dict = self._merge_dicts(phrase_dict, include_dict, exclude_list)
         chars_replaced = ReplacementUtils.char_replace_over_string(sentence, char_dict)
         new_sentence = ReplacementUtils.word_replace_over_string(chars_replaced, phrase_dict)
-        new_sentence = ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_skip)
-        return new_sentence
+        return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_skip)
 
     def map_one_to_many_openai(self, string: str, mapping_dict: dict, openai_function) -> str:
         for char in mapping_dict:
@@ -332,8 +331,7 @@ class ToTwTradScriptConversion(CustomScriptConversion):
                 )  # TODO: update this to the new format
             else:
                 new_sentence = sentence.replace(char, cc_converted_sentence[sentence.index(char)])
-        new_sentence = ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
-        return new_sentence
+        return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
 
     def traditionalize_characters(
         self,
@@ -346,10 +344,9 @@ class ToTwTradScriptConversion(CustomScriptConversion):
         new_sentence = sentence
         chars_in_sentence = [char for char in chars_dict if char in sentence]
         for char in chars_in_sentence:
-            new_sentence = sentence.replace(char, chars_dict[char])
+            new_sentence = new_sentence.replace(char, chars_dict[char])
 
-        new_sentence = ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
-        return new_sentence
+        return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
 
     def taiwanize_phrases(
         self,
@@ -382,9 +379,7 @@ class ToTwTradScriptConversion(CustomScriptConversion):
         chars_in_sentence = [char for char in chars_dict if char in sentence]
         for char in chars_in_sentence:
             new_sentence = sentence.replace(char, chars_dict[char])
-
-        new_sentence = ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_skip)
-        return new_sentence
+        return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_skip)
 
     """ Main Sub Function """
 
@@ -451,13 +446,12 @@ class ToTwTradScriptConversion(CustomScriptConversion):
         indexes_to_protect: list[tuple[int, int]] = ReplacementUtils.get_indexes_to_protect_from_list(
             sentence, t2tw_phrases_dict
         )
-        sentence = self.taiwanize_characters(
+        return self.taiwanize_characters(
             sentence,
             indexes_to_protect,
             include_dicts.get("taiwanize_characters"),
             exclude_lists.get("taiwanize_characters"),
         )
-        return sentence
 
 
 class ToSimpScriptConversion(CustomScriptConversion):
