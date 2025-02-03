@@ -1,0 +1,161 @@
+[project]
+name = "mandarin-tamer"
+version = "1.0.0"
+requires-python = ">= 3.11"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# MYPY
+[tool.mypy]
+cache_dir = "./.top_level/.mypy_cache"
+ignore_missing_imports = true
+disable_error_code = ["has-type"]
+exclude = ["**/venv/**", "**/env/**", "**/.top_level/**"]
+
+# PYLANCE
+[tool.pyright]
+exclude = ["**/venv/**", "**/env/**", "**/.top_level/**"]
+
+# RUFF
+[tool.ruff]
+exclude = [
+    "__init__.py",
+    "__pycache__",
+    ".envs/",
+    ".git",
+    ".github/",
+    ".top_level/",
+    ".vscode/",
+    "build",
+    "docs/",
+    "env/",
+    "venv/",
+]
+extend-include = ["*.ipynb"]
+indent-width = 4
+line-length = 120
+show-fixes = true
+# https://docs.astral.sh/ruff/rules/
+extend-select = [
+    "A",     # flake8-builtins
+    "AIR",   # Airflow
+    "ARG",   # flake8-unused-arguments
+    "ASYNC", # flake8-async
+    "B",     # flake8-bugbear
+    "BLE",   # flake8-blind-except
+    "C4",    # flake8-comprehensions
+    "C90",   # mccabe
+    "COM",   # flake8-commas
+    "DJ",    # flake8-django
+    "DTZ",   # flake8-datetimez
+    "E501",  # pycodestyle
+    "EM",    # flake8-errmsg
+    "ERA",   # eradicate
+    "EXE",   # flake8-executable
+    "FA",    # flake8-future-annotations
+    "FBT",   # flake8-boolean-trap
+    "FIX",   # flake8-fixme
+    "FLY",   # flynt
+    "FURB",  # refurb
+    "G",     # flake8-logging-format
+    "I",     # isort
+    "ICN",   # flake8-import-conventions
+    "INT",   # flake8-gettext
+    "ISC",   # flake8-implicit-str-concat
+    "LOG",   # flake8-logging
+    "N",     # pep8-naming
+    "NPY",   # NumPy-specific-rules
+    "PD",    # pandas-vet
+    "PERF",  # Perflint
+    "PGH",   # pygrep-hooks
+    "PIE",   # flake8-pie
+    "PL",    # Pylint
+    "PT",    # flake8-pytest-style
+    "PTH",   # flake8-use-pathlib
+    "PYI",   # flake8-pyi
+    "Q",     # flake8-quotes
+    "RET",   # flake8-return
+    "RSE",   # flake8-raise
+    "RUF",   # Ruff-specific-rules
+    "S",     # flake8-bandit
+    "SIM",   # flake8-simplify
+    "SLF",   # flake8-self
+    "SLOT",  # flake8-slots
+    "T10",   # flake8-debugger
+    "T20",   # flake8-print
+    "TD",    # flake8-todos
+    "TID",   # flake8-tidy-imports
+    "TRY",   # tryceratops
+    "UP",    # pyupgrade
+    "W",     # pycodestyle
+    "YTT",   # flake8-2020
+    # "ANN", # flake8-annotations
+    # "CPY", # flake8-copyright
+    # "D", # pydocstyle
+    # "INP", # flake8-no-pep420
+    # "TCH",   # flake8-type-checking
+]
+ignore = [
+    "COM812",
+    "E712",
+    "ERA001",
+    "F403",
+    "ISC001",
+    "PTH",
+    "RUF001",
+    "RUF012",
+    "S101",
+    "T201",
+]
+
+[tool.ruff.format]
+indent-style = "space"
+line-ending = "auto"
+quote-style = "double"
+skip-magic-trailing-comma = false
+
+
+[tool.ruff.isort]
+# https://docs.astral.sh/ruff/settings/#lintisort
+lines-after-imports = 2
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "django",
+    "utils",
+    "first-party",
+    "local-folder",
+]
+no-lines-before = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+# force_grid_wrap = 0
+# include_trailing_comma = true
+# line_length = 120
+# lines_between_sections = 1
+# multi_line_output = 3
+# use_parentheses = true
+
+[tool.ruff.lint.isort.sections]
+"django" = [
+    "django",
+    "django_extensions",
+    "djoser",
+    "drf_spectacular",
+    "import_export",
+    "model_utils",
+    "pytest_django",
+    "rest_framework",
+    "rest_framework_simplejwt",
+]
+"utils" = ["utils"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 7
