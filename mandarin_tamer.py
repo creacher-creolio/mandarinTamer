@@ -326,11 +326,9 @@ class ToTwTradScriptConversion(CustomScriptConversion):
         new_sentence = sentence
         for char in chars_in_sentence:
             if improved_one_to_many:
-                sentence = self.map_one_to_many_openai(
-                    sentence, amb_dict, openai_s2t_ambiguous_mappings
-                )  # TODO: update this to the new format
+                new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_s2t_ambiguous_mappings)
             else:
-                new_sentence = sentence.replace(char, cc_converted_sentence[sentence.index(char)])
+                new_sentence = new_sentence.replace(char, cc_converted_sentence[sentence.index(char)])
         return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
 
     def traditionalize_characters(
