@@ -54,6 +54,7 @@ Taiwan:
 
 - **Rita J. Lee (李佩蓉)** – PhD in Chinese Literature; Taipei.
 - **Jamie Chang (張汝禎)** - Taipei
+- **Hsin Fang Wu** - Taipei
 
 Mainland China:
 
@@ -62,5 +63,6 @@ Mainland China:
 Hong Kong:
 
 - **Julia Yuen**
+- **Lok Yee Chan**
 
 Their dedication and expertise have been crucial in ensuring the accuracy and reliability of MandarinTamer.
