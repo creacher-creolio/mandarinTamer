@@ -260,7 +260,7 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
     def _replace_over_list_with_sentence(
         self,
         sentence: str,
-        indexes_to_skip: list[tuple[int, int]],
+        indexes_to_protect: list[tuple[int, int]],
         char_dict: dict,
         phrase_dict: dict,
         include_dict: dict | None = None,
@@ -270,7 +270,7 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
         phrase_dict = self._merge_dicts(phrase_dict, include_dict, exclude_list)
         chars_replaced = ReplacementUtils.char_replace_over_string(sentence, char_dict)
         new_sentence = ReplacementUtils.word_replace_over_string(chars_replaced, phrase_dict)
-        return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_skip)
+        return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
 
     def map_one_to_many_openai(self, string: str, mapping_dict: dict, openai_function) -> str:
         for char in mapping_dict:
@@ -325,8 +325,7 @@ class ToTwTradScriptConversion(CustomScriptConversion):
     ) -> str:
         amb_dict = self._merge_dicts(self.s2t_amb_dict, include_dict, exclude_list)
         chars_in_sentence = [char for char in amb_dict if char in sentence]
-        cc = OpenCC("s2twp")
-        cc_converted_sentence = cc.convert(sentence)
+        cc_converted_sentence = self.get_converted_opencc_sentence(sentence, "s2twp")
         new_sentence = sentence
         for char in chars_in_sentence:
             if improved_one_to_many:
