@@ -50,8 +50,17 @@ print(traditional_text)
 
 The dictionaries powering MandarinTamer have been made highly accurate for the top 10,000 Mandarin words, thanks to the contributions of professional translators from Taiwan, Hong Kong, and Mainland China. Special thanks to the following individuals for their valuable work in curating and verifying the dictionaries that power the tool:
 
-- **Translator 1** (Taipei, Taiwan) – Expertise in modern and classical Mandarin.
-- **Translator 2** (Kaohsiung, Taiwan) – Specialist in traditional Chinese literature and linguistics.
-- **Translator 3** (Tainan, Taiwan) – Focus on regional language variants and cultural nuances.
+Taiwan:
+
+- **Rita J. Lee (李佩蓉)** – PhD in Chinese Literature; Taipei.
+- **Jamie Chang (張汝禎)** - Taipei
+
+Mainland China:
+
+- **Zhou Yu**
+
+Hong Kong:
+
+- **Julia Yuen**
 
 Their dedication and expertise have been crucial in ensuring the accuracy and reliability of MandarinTamer.
