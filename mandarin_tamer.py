@@ -152,14 +152,14 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
 
     def modernize_simplified_list(
         self,
-        sentence_parts: list[str],
-        phrases_to_skip: list[str],
+        sentence: str,
+        indexes_to_protect: list[tuple[int, int]],
         include_dict: dict | None = None,
         exclude_list: list | None = None,
-    ) -> list[str]:
-        return self._replace_over_list(
-            sentence_parts,
-            phrases_to_skip,
+    ) -> str:
+        return self._replace_over_list_with_sentence(
+            sentence,
+            indexes_to_protect,
             self.modernize_simp_char_dict,
             self.modernize_simp_phrase_dict,
             include_dict,
@@ -183,14 +183,14 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
 
     def normalize_simplified_list(
         self,
-        sentence_parts: list[str],
-        phrases_to_skip: list[str],
+        sentence: str,
+        indexes_to_protect: list[tuple[int, int]],
         include_dict: dict | None = None,
         exclude_list: list | None = None,
-    ) -> list[str]:
-        return self._replace_over_list(
-            sentence_parts,
-            phrases_to_skip,
+    ) -> str:
+        return self._replace_over_list_with_sentence(
+            sentence,
+            indexes_to_protect,
             self.normalize_simp_char_dict,
             self.normalize_simp_phrase_dict,
             include_dict,
@@ -285,6 +285,10 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
             if char in string:
                 string = string.replace(char, cc_converted_sentence[string.index(char)])
         return string
+
+    def get_converted_opencc_sentence(self, string: str, opencc_config: str) -> str:
+        cc = OpenCC(opencc_config)
+        return cc.convert(string)
 
     def _merge_dicts(
         self,
@@ -458,84 +462,80 @@ class ToSimpScriptConversion(CustomScriptConversion):
 
     def detaiwanize_one_to_many(
         self,
-        sentence_parts: list[str],
-        phrases_to_skip: list[str],
+        sentence: str,
+        indexes_to_protect: list[tuple[int, int]],
         improved_one_to_many: bool,
         include_dict: dict | None = None,
         exclude_list: list | None = None,
-    ) -> list[str]:
+    ) -> str:
         amb_dict = self._merge_dicts(self.tw2t_amb_dict, include_dict, exclude_list)
-        for i, part in enumerate(sentence_parts):
-            if part not in phrases_to_skip:
-                if improved_one_to_many:
-                    sentence_parts[i] = self.map_one_to_many_openai(
-                        part, amb_dict, openai_detaiwanize_ambiguous_mappings
-                    )
-                else:
-                    sentence_parts[i] = self.map_one_to_many_opencc(part, amb_dict, "tw2sp")
-        return sentence_parts
+        sentence_chars_in_dict = [char for char in amb_dict if char in sentence]
+        cc_converted_sentence = self.get_converted_opencc_sentence(sentence, "tw2sp")
+        new_sentence = sentence
+        for char in sentence_chars_in_dict:
+            if improved_one_to_many:
+                new_sentence = self.map_one_to_many_openai(
+                    new_sentence, amb_dict, openai_detaiwanize_ambiguous_mappings
+                )
+            else:
+                new_sentence = new_sentence.replace(char, cc_converted_sentence[sentence.index(char)])
+        return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
 
     def detaiwanize_characters(
         self,
-        sentence_parts: list[str],
-        phrases_to_skip: list[str],
+        sentence: str,
+        indexes_to_protect: list[tuple[int, int]],
         include_dict: dict | None = None,
         exclude_list: list | None = None,
-    ) -> list[str]:
+    ) -> str:
         chars_dict = self._merge_dicts(self.tw2t_chars_dict, include_dict, exclude_list)
-        for i, part in enumerate(sentence_parts):
-            if part not in phrases_to_skip:
-                for char in part:
-                    if char in chars_dict:
-                        sentence_parts[i] = sentence_parts[i].replace(char, chars_dict[char])
-        return sentence_parts
+        sentence_chars_in_dict = [char for char in chars_dict if char in sentence]
+        new_sentence = sentence
+        for char in sentence_chars_in_dict:
+            new_sentence = new_sentence.replace(char, chars_dict[char])
+        return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
 
     def simplify_phrases(
         self,
-        sentence_parts: list[str],
+        sentence: str,
         include_dict: dict | None = None,
         exclude_list: list | None = None,
-    ) -> tuple[list[str], list[str]]:
-        phrases_to_skip: list[str] = []
-        new_sentence_parts: list[str] = []
+    ) -> tuple[str, list[tuple[int, int]]]:
         t2s_phrases_dict = self._merge_dicts(self.t2s_phrases_dict, include_dict, exclude_list)
-        for part in sentence_parts:
-            new_part = part
-            possible_part_phrases = ReplacementUtils.get_possible_sentence_phrases(part)
-            for phrase in possible_part_phrases:
-                if phrase in t2s_phrases_dict:
-                    new_part = new_part.replace(phrase, t2s_phrases_dict[phrase])
-                    phrases_to_skip.append(t2s_phrases_dict[phrase])
-            new_sentence_parts.append(new_part)
-        return new_sentence_parts, phrases_to_skip
+        new_sentence = sentence
+        possible_part_phrases = ReplacementUtils.get_possible_sentence_phrases(sentence)
+        for phrase in possible_part_phrases:
+            if phrase in t2s_phrases_dict:
+                new_sentence = new_sentence.replace(phrase, t2s_phrases_dict[phrase])
+
+        indexes_to_protect = ReplacementUtils.get_indexes_to_protect_from_list(sentence, t2s_phrases_dict)
+        return new_sentence, indexes_to_protect
 
     def simplify_one_to_many(
         self,
-        sentence_parts: list[str],
-        phrases_to_skip: list[str],
+        sentence: str,
+        indexes_to_protect: list[tuple[int, int]],
         improved_one_to_many: bool,
-    ) -> list[str]:
+    ) -> str:
         amb_dict = self.merged_t2s_amb_dict
-        for i, part in enumerate(sentence_parts):
-            if part not in phrases_to_skip:
-                if improved_one_to_many:
-                    sentence_parts[i] = self.map_one_to_many_openai(part, amb_dict, openai_t2s_ambiguous_mappings)
-                else:
-                    sentence_parts[i] = self.map_one_to_many_opencc(part, amb_dict, "tw2sp")
-        return sentence_parts
+        new_sentence = sentence
+        if improved_one_to_many:
+            new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_t2s_ambiguous_mappings)
+        else:
+            new_sentence = self.map_one_to_many_opencc(new_sentence, amb_dict, "tw2sp")
+        return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
 
     def simplify_characters(
         self,
-        sentence_parts: list[str],
-        phrases_to_skip: list[str],
-    ) -> list[str]:
+        sentence: str,
+        indexes_to_protect: list[tuple[int, int]],
+    ) -> str:
         chars_dict = self.merged_t2s_chars_dict
-        for i, part in enumerate(sentence_parts):
-            if part not in phrases_to_skip:
-                for char in chars_dict:
-                    if char in part:
-                        sentence_parts[i] = sentence_parts[i].replace(char, chars_dict[char])
-        return sentence_parts
+        new_sentence = sentence
+        sentence_chars_in_dict = [char for char in chars_dict if char in sentence]
+        for char in sentence_chars_in_dict:
+            new_sentence = new_sentence.replace(char, chars_dict[char])
+        return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
 
     """ Main Sub Function """
 
@@ -553,47 +553,48 @@ class ToSimpScriptConversion(CustomScriptConversion):
         sentence = self.normalize_traditional(sentence)
         sentence = self.detaiwanize_phrases(sentence)
 
-        phrases_to_skip = ReplacementUtils.get_phrases_to_skip(sentence, self.tw2t_phrases_dict)
-        sentence_parts = ReplacementUtils.split_sentence_by_phrases(sentence, phrases_to_skip)
+        indexes_to_protect: list[tuple[int, int]] = ReplacementUtils.get_indexes_to_protect_from_list(
+            sentence, self.tw2t_phrases_dict
+        )
 
-        sentence_parts = self.detaiwanize_one_to_many(
-            sentence_parts,
-            phrases_to_skip,
+        sentence = self.detaiwanize_one_to_many(
+            sentence,
+            indexes_to_protect,
             improved_one_to_many,
             include_dicts.get("detaiwanize_one_to_many"),
             exclude_lists.get("detaiwanize_one_to_many"),
         )
-        sentence_parts = self.detaiwanize_characters(
-            sentence_parts,
-            phrases_to_skip,
+        sentence = self.detaiwanize_characters(
+            sentence,
+            indexes_to_protect,
         )
-        sentence_parts, phrases_to_skip = self.simplify_phrases(
-            sentence_parts,
+        sentence, indexes_to_protect = self.simplify_phrases(
+            sentence,
             include_dicts.get("simplify_phrases"),
             exclude_lists.get("simplify_phrases"),
         )
-        sentence_parts = self.simplify_one_to_many(
-            sentence_parts,
-            phrases_to_skip,
+
+        sentence = self.simplify_one_to_many(
+            sentence,
+            indexes_to_protect,
             improved_one_to_many,
         )
-        sentence_parts = self.simplify_characters(
-            sentence_parts,
-            phrases_to_skip,
+        sentence = self.simplify_characters(
+            sentence,
+            indexes_to_protect,
         )
-        sentence_parts = self.modernize_simplified_list(
-            sentence_parts,
-            phrases_to_skip,
+        sentence = self.modernize_simplified_list(
+            sentence,
+            indexes_to_protect,
             include_dicts.get("modernize_simplified"),
             exclude_lists.get("modernize_simplified"),
         )
-        sentence_parts = self.normalize_simplified_list(
-            sentence_parts,
-            phrases_to_skip,
+        return self.normalize_simplified_list(
+            sentence,
+            indexes_to_protect,
             include_dicts.get("normalize_simplified"),
             exclude_lists.get("normalize_simplified"),
         )
-        return "".join(sentence_parts)
 
 
 def custom_script_conversion(
