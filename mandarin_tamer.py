@@ -348,22 +348,18 @@ class ToTwTradScriptConversion(CustomScriptConversion):
 
     def taiwanize_phrases(
         self,
-        sentence_parts: list[str],
+        sentence: str,
         include_dict: dict | None = None,
         exclude_list: list | None = None,
-    ) -> tuple[list[str], list[str]]:
-        phrases_to_skip: list[str] = []
-        new_sentence_parts: list[str] = []
+    ) -> tuple[str, list[tuple[int, int]]]:
         t2tw_phrases_dict = self._merge_dicts(self.t2tw_phrases_dict, include_dict, exclude_list)
-        for part in sentence_parts:
-            new_part = part
-            possible_part_phrases = ReplacementUtils.get_possible_sentence_phrases(part)
-            for phrase in possible_part_phrases:
-                if phrase in t2tw_phrases_dict:
-                    new_part = new_part.replace(phrase, t2tw_phrases_dict[phrase])
-                    phrases_to_skip.append(t2tw_phrases_dict[phrase])
-            new_sentence_parts.append(new_part)
-        return new_sentence_parts, phrases_to_skip
+        new_sentence = sentence
+        possible_sentence_phrases = ReplacementUtils.get_possible_sentence_phrases(sentence)
+        for phrase in possible_sentence_phrases:
+            if phrase in t2tw_phrases_dict:
+                new_sentence = new_sentence.replace(phrase, t2tw_phrases_dict[phrase])
+        indexes_to_protect = ReplacementUtils.get_indexes_to_protect_from_list(sentence, t2tw_phrases_dict)
+        return new_sentence, indexes_to_protect
 
     def taiwanize_characters(
         self,
@@ -436,13 +432,11 @@ class ToTwTradScriptConversion(CustomScriptConversion):
             include_dicts.get("normalize_traditional"),
             exclude_lists.get("normalize_traditional"),
         )
-        t2tw_phrases_dict = self._merge_dicts(
-            self.t2tw_phrases_dict,
+        sentence, indexes_to_protect = self.taiwanize_phrases(
+            sentence,
             include_dicts.get("taiwanize_phrases"),
             exclude_lists.get("taiwanize_phrases"),
         )
-
-        indexes_to_protect = ReplacementUtils.get_indexes_to_protect_from_list(sentence, t2tw_phrases_dict)
 
         return self.taiwanize_characters(
             sentence,
