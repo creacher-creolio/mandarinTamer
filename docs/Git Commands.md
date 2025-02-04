@@ -32,6 +32,7 @@ git config --global alias.cm '!git commit -m'  # create an alias command that ad
 git config --global alias.ca '!git add . && git commit -m'  # create an alias command that adds and commits at the same time
 git config --global alias.sa '!git add . && git stash'  # create an alias command that adds and stashes at the same time
 git config --global alias.sp '!git stash pop'  # create an alias command that pops the top layer of the stash
+git cm "<some message>" # commit staged changes (after alias has been created)
 git ca "<some message>" # commit and add at the same time (after alias has been created)
 git sa # stash and add at the same time (after alias has been created)
 git sp # pop the top layer of the stash (after alias has been created)
