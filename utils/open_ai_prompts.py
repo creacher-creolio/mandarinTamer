@@ -1,6 +1,6 @@
 import json
-from openai import OpenAI
 
+from openai import OpenAI
 
 client = OpenAI()
 
@@ -38,9 +38,7 @@ def openai_s2t_ambiguous_mappings(sentence, token, mapping_dict):
     system_context = """
     Return as json the best_replacement_token for the token in the sentence based on the options in the mapping_dictionary for conversion from Simplified Mandarin to Traditional Taiwanese Mandarin.
     """
-    user_context = (
-        f"sentence: {sentence}; token: {token}; mapping_dictionary: {mapping_dict}"
-    )
+    user_context = f"sentence: {sentence}; token: {token}; mapping_dictionary: {mapping_dict}"
     response = (
         get_openai_response(
             system_content=system_context,
@@ -57,10 +55,7 @@ def openai_t2s_ambiguous_mappings(tokenized_sentence, token, mapping_dict):
     system_context = """
     Return as json the best_replacement_token for the token in the sentence based on the options in the mapping_dictionary for conversion from Traditional to Simplified Mandarin.
     """
-    user_context = (
-        f"tokenized_sentence: {tokenized_sentence}; token: {token}; "
-        f"mapping_dictionary: {mapping_dict}"
-    )
+    user_context = f"tokenized_sentence: {tokenized_sentence}; token: {token}; mapping_dictionary: {mapping_dict}"
     response = (
         get_openai_response(
             system_content=system_context,
@@ -77,10 +72,7 @@ def openai_detaiwanize_ambiguous_mappings(tokenized_sentence, token, mapping_dic
     system_context = """
     Return as json the best_replacement_token for the token in the sentence based on the options in the mapping_dictionary for conversion from Traditional Taiwanese Mandarin to Traditional Hong Kong Mandarin.
     """
-    user_context = (
-        f"tokenized_sentence: {tokenized_sentence}; token: {token}; "
-        f"mapping_dictionary: {mapping_dict}"
-    )
+    user_context = f"tokenized_sentence: {tokenized_sentence}; token: {token}; mapping_dictionary: {mapping_dict}"
     response = (
         get_openai_response(
             system_content=system_context,

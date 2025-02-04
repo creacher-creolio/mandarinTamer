@@ -441,9 +441,9 @@ class ToTwTradScriptConversion(CustomScriptConversion):
             include_dicts.get("taiwanize_phrases"),
             exclude_lists.get("taiwanize_phrases"),
         )
-        indexes_to_protect: list[tuple[int, int]] = ReplacementUtils.get_indexes_to_protect_from_list(
-            sentence, t2tw_phrases_dict
-        )
+
+        indexes_to_protect = ReplacementUtils.get_indexes_to_protect_from_list(sentence, t2tw_phrases_dict)
+
         return self.taiwanize_characters(
             sentence,
             indexes_to_protect,
