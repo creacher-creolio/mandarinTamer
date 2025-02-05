@@ -40,3 +40,5 @@ coverage/
 # Project-specific
 tests/
 useful_functions/
+s2t_sources/
+t2s_sources/
