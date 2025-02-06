@@ -8,9 +8,7 @@ from utils.punctuation_utils import punctuation_pattern
 class ReplacementUtils:
     @staticmethod
     def get_possible_sentence_phrases(sentence):
-        sentence = "".join(
-            [char for char in sentence if char not in punctuation_pattern]
-        )
+        sentence = "".join([char for char in sentence if char not in punctuation_pattern])
         sentence_length = len(sentence)
         max_phrase_length = 5
         return sorted(
@@ -25,17 +23,28 @@ class ReplacementUtils:
 
     @staticmethod
     def get_phrases_to_skip(sentence: str, dictionary: dict) -> list[str]:
-        possible_sentence_phrases = ReplacementUtils.get_possible_sentence_phrases(
-            sentence
-        )
-        return ReplacementUtils._get_phrases_to_skip_from_list(
-            possible_sentence_phrases, dictionary
-        )
+        possible_sentence_phrases = ReplacementUtils.get_possible_sentence_phrases(sentence)
+        return ReplacementUtils._get_phrases_to_skip_from_list(possible_sentence_phrases, dictionary)
 
     @staticmethod
-    def _get_phrases_to_skip_from_list(
-        phrases: list[str], dictionary: dict
-    ) -> list[str]:
+    def get_indexes_to_protect_from_list(sentence: str, dictionary: dict) -> list[tuple[int, int]]:
+        indexes_to_protect = []
+        for phrase in dictionary:
+            start = 0
+            while (start := sentence.find(phrase, start)) != -1:
+                end = start + len(phrase)
+                indexes_to_protect.append((start, end))
+                start = end
+        for phrase in dictionary.values():
+            start = 0
+            while (start := sentence.find(phrase, start)) != -1:
+                end = start + len(phrase)
+                indexes_to_protect.append((start, end))
+                start = end
+        return list(set(indexes_to_protect))
+
+    @staticmethod
+    def _get_phrases_to_skip_from_list(phrases: list[str], dictionary: dict) -> list[str]:
         phrases_to_skip = []
         for phrase in phrases:
             if phrase in dictionary:
@@ -61,9 +70,9 @@ class ReplacementUtils:
 
     @staticmethod
     def substring_replace_via_dictionary(sentence: str, dictionary: dict) -> str:
-        for string in dictionary:
-            if string in sentence:
-                sentence = sentence.replace(string, dictionary[string])
+        for k, v in dictionary.items():
+            if k in sentence:
+                sentence = sentence.replace(k, v)
         return sentence
 
     @staticmethod
@@ -77,3 +86,9 @@ class ReplacementUtils:
             if phrase in dictionary:
                 sentence = sentence.replace(phrase, dictionary[phrase])
         return sentence
+
+    @staticmethod
+    def revert_protected_indexes(sentence: str, new_sentence: str, indexes_to_protect: list[tuple[int, int]]) -> str:
+        for start, end in indexes_to_protect:
+            new_sentence = new_sentence[:start] + sentence[start:end] + new_sentence[end:]
+        return new_sentence
