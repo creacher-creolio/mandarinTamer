@@ -62,7 +62,7 @@ Mainland China:
 
 Hong Kong:
 
-- **Julia Yuen**
+- **Julia Yuen Ka Suen (袁嘉旋)**
 - **Lok Yee Chan**
 
 Their dedication and expertise have been crucial in ensuring the accuracy and reliability of MandarinTamer.
