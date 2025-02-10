@@ -327,10 +327,10 @@ class ToTwTradScriptConversion(CustomScriptConversion):
         chars_in_sentence = [char for char in amb_dict if char in sentence]
         cc_converted_sentence = self.get_converted_opencc_sentence(sentence, "s2twp")
         new_sentence = sentence
-        for char in chars_in_sentence:
-            if improved_one_to_many:
-                new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_s2t_ambiguous_mappings)
-            else:
+        if improved_one_to_many:
+            new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_s2t_ambiguous_mappings)
+        else:
+            for char in chars_in_sentence:
                 new_sentence = new_sentence.replace(char, cc_converted_sentence[sentence.index(char)])
         return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
 
@@ -471,12 +471,10 @@ class ToSimpScriptConversion(CustomScriptConversion):
         sentence_chars_in_dict = [char for char in amb_dict if char in sentence]
         cc_converted_sentence = self.get_converted_opencc_sentence(sentence, "tw2sp")
         new_sentence = sentence
-        for char in sentence_chars_in_dict:
-            if improved_one_to_many:
-                new_sentence = self.map_one_to_many_openai(
-                    new_sentence, amb_dict, openai_detaiwanize_ambiguous_mappings
-                )
-            else:
+        if improved_one_to_many:
+            new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_detaiwanize_ambiguous_mappings)
+        else:
+            for char in sentence_chars_in_dict:
                 new_sentence = new_sentence.replace(char, cc_converted_sentence[sentence.index(char)])
         return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
 
