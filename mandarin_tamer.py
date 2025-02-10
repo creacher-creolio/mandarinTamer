@@ -19,12 +19,16 @@ class CustomScriptConversionDictionaries:
         self.include_dicts = include_dicts or {}
         self.exclude_lists = exclude_lists or {}
 
+        self.modernize_simp_amb_dict = self.load_dict("modernize_simp_amb.json")
         self.modernize_simp_char_dict = self.load_dict("modernize_simp_char.json")
         self.modernize_simp_phrase_dict = self.load_dict("modernize_simp_phrase.json")
+        self.normalize_simp_amb_dict = self.load_dict("normalize_simp_amb.json")
         self.normalize_simp_char_dict = self.load_dict("normalize_simp_char.json")
         self.normalize_simp_phrase_dict = self.load_dict("normalize_simp_phrase.json")
+        self.modernize_trad_amb_dict = self.load_dict("modernize_trad_amb.json")
         self.modernize_trad_char_dict = self.load_dict("modernize_trad_char.json")
         self.modernize_trad_phrase_dict = self.load_dict("modernize_trad_phrase.json")
+        self.normalize_trad_amb_dict = self.load_dict("normalize_trad_amb.json")
         self.normalize_trad_char_dict = self.load_dict("normalize_trad_char.json")
         self.normalize_trad_phrase_dict = self.load_dict("normalize_trad_phrase.json")
         self.s2t_phrases_dict = self.load_dict("s2t_phrases.json")
@@ -134,6 +138,25 @@ class CustomScriptConversionDictionaries:
 
 
 class CustomScriptConversion(CustomScriptConversionDictionaries):
+    def modernize_simp_one_to_many(
+        self,
+        sentence: str,
+        improved_one_to_many: bool,
+        include_dict: dict | None = None,
+        exclude_list: list | None = None,
+    ) -> str:
+        amb_dict = self._merge_dicts(self.modernize_simp_amb_dict, include_dict, exclude_list)
+        chars_in_sentence = [char for char in amb_dict if char in sentence]
+        cc_converted_sentence = self.get_converted_opencc_sentence(sentence, "s2twp")
+        new_sentence = sentence
+        if improved_one_to_many:
+            new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_s2t_ambiguous_mappings)
+        # TODO: update prompt
+        else:
+            for char in chars_in_sentence:
+                new_sentence = new_sentence.replace(char, cc_converted_sentence[sentence.index(char)])
+        return new_sentence
+
     def modernize_simplified(
         self,
         sentence: str,
@@ -166,6 +189,19 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
             exclude_list,
         )
 
+    def normalize_simp_one_to_many(self, sentence, improved_one_to_many, include_dict=None, exclude_list=None) -> str:
+        amb_dict = self._merge_dicts(self.normalize_simp_amb_dict, include_dict, exclude_list)
+        chars_in_sentence = [char for char in amb_dict if char in sentence]
+        cc_converted_sentence = self.get_converted_opencc_sentence(sentence, "s2twp")
+        new_sentence = sentence
+        if improved_one_to_many:
+            new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_s2t_ambiguous_mappings)
+            # TODO:  update openai prompt?
+        else:
+            for char in chars_in_sentence:
+                new_sentence = new_sentence.replace(char, cc_converted_sentence[sentence.index(char)])
+        return new_sentence
+
     def normalize_simplified(
         self,
         sentence: str,
@@ -197,6 +233,19 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
             exclude_list,
         )
 
+    def modernize_trad_one_to_many(self, sentence, improved_one_to_many, include_dict=None, exclude_list=None):
+        amb_dict = self._merge_dicts(self.modernize_trad_amb_dict, include_dict, exclude_list)
+        chars_in_sentence = [char for char in amb_dict if char in sentence]
+        cc_converted_sentence = self.get_converted_opencc_sentence(sentence, "s2twp")
+        new_sentence = sentence
+        if improved_one_to_many:
+            new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_s2t_ambiguous_mappings)
+        #     TODO: update openai prompt?
+        else:
+            for char in chars_in_sentence:
+                new_sentence = new_sentence.replace(char, cc_converted_sentence[sentence.index(char)])
+        return new_sentence
+
     def modernize_traditional(self, sentence: str) -> str:
         phrases_replaced = ReplacementUtils.word_replace_over_string(sentence, self.merged_modernize_trad_phrase_dict)
         return ReplacementUtils.char_replace_over_string(phrases_replaced, self.merged_modernize_trad_char_dict)
@@ -216,6 +265,19 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
             include_dict,
             exclude_list,
         )
+
+    def normalize_trad_one_to_many(self, sentence, improved_one_to_many, include_dict=None, exclude_list=None):
+        amb_dict = self._merge_dicts(self.normalize_trad_amb_dict, include_dict, exclude_list)
+        chars_in_sentence = [char for char in amb_dict if char in sentence]
+        cc_converted_sentence = self.get_converted_opencc_sentence(sentence, "s2twp")
+        new_sentence = sentence
+        if improved_one_to_many:
+            new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_s2t_ambiguous_mappings)
+        #     TODO: update openai prompt?
+        else:
+            for char in chars_in_sentence:
+                new_sentence = new_sentence.replace(char, cc_converted_sentence[sentence.index(char)])
+        return new_sentence
 
     def normalize_traditional(
         self,
@@ -390,10 +452,24 @@ class ToTwTradScriptConversion(CustomScriptConversion):
         include_dicts = include_dicts or {}
         exclude_lists = exclude_lists or {}
 
+        sentence = self.modernize_simp_one_to_many(
+            sentence,
+            improved_one_to_many,
+            include_dicts.get("modernize_simplified_amb"),
+            exclude_lists.get("modernize_simplified_amb"),
+        )
+
         sentence = self.modernize_simplified(
             sentence,
             include_dicts.get("modernize_simplified"),
             exclude_lists.get("modernize_simplified"),
+        )
+
+        sentence = self.normalize_simp_one_to_many(
+            sentence,
+            improved_one_to_many,
+            include_dicts.get("normalize_simp_amb"),
+            exclude_lists.get("normalize_simp_amb"),
         )
         sentence = self.normalize_simplified(
             sentence,
@@ -545,8 +621,19 @@ class ToSimpScriptConversion(CustomScriptConversion):
     ) -> str:
         include_dicts = include_dicts or {}
         exclude_lists = exclude_lists or {}
-
+        sentence = self.modernize_trad_one_to_many(
+            sentence,
+            improved_one_to_many,
+            include_dicts.get("modernize_traditional_one_to_many"),
+            exclude_lists.get("modernize_traditional_one_to_many"),
+        )
         sentence = self.modernize_traditional(sentence)
+        sentence = self.normalize_trad_one_to_many(
+            sentence,
+            improved_one_to_many,
+            include_dicts.get("normalize_traditional_one_to_many"),
+            exclude_lists.get("normalize_traditional_one_to_many"),
+        )
         sentence = self.normalize_traditional(sentence)
         sentence = self.detaiwanize_phrases(sentence)
 
