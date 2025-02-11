@@ -7,9 +7,9 @@ from opencc import OpenCC
 sys.path.append("..")
 from utils.file_conversion import FileConversion
 from utils.open_ai_prompts import (
-    openai_detaiwanize_ambiguous_mappings,
-    openai_s2t_ambiguous_mappings,
-    openai_t2s_ambiguous_mappings,
+    openai_detaiwanize_one2many_mappings,
+    openai_s2t_one2many_mappings,
+    openai_t2s_one2many_mappings,
 )
 from utils.replacement_by_dictionary import ReplacementUtils
 
@@ -20,73 +20,73 @@ class CustomScriptConversionDictionaries:
         self.exclude_lists = exclude_lists or {}
 
         self.modernize_simp_amb_dict = self.load_dict("modernize_simp_amb.json")
-        self.modernize_simp_char_dict = self.load_dict("modernize_simp_char.json")
-        self.modernize_simp_phrase_dict = self.load_dict("modernize_simp_phrase.json")
+        self.modernize_simp_char_dict = self.load_dict("simp2simp", "modern_simp_char.json")
+        self.modernize_simp_phrase_dict = self.load_dict("simp2simp", "modern_simp_phrase.json")
         self.normalize_simp_amb_dict = self.load_dict("normalize_simp_amb.json")
-        self.normalize_simp_char_dict = self.load_dict("normalize_simp_char.json")
-        self.normalize_simp_phrase_dict = self.load_dict("normalize_simp_phrase.json")
+        self.normalize_simp_char_dict = self.load_dict("simp2simp", "norm_simp_char.json")
+        self.normalize_simp_phrase_dict = self.load_dict("simp2simp", "norm_simp_phrase.json")
         self.modernize_trad_amb_dict = self.load_dict("modernize_trad_amb.json")
-        self.modernize_trad_char_dict = self.load_dict("modernize_trad_char.json")
-        self.modernize_trad_phrase_dict = self.load_dict("modernize_trad_phrase.json")
+        self.modernize_trad_char_dict = self.load_dict("trad2trad", "modern_trad_char.json")
+        self.modernize_trad_phrase_dict = self.load_dict("trad2trad", "modern_trad_phrase.json")
         self.normalize_trad_amb_dict = self.load_dict("normalize_trad_amb.json")
-        self.normalize_trad_char_dict = self.load_dict("normalize_trad_char.json")
-        self.normalize_trad_phrase_dict = self.load_dict("normalize_trad_phrase.json")
-        self.s2t_phrases_dict = self.load_dict("s2t_phrases.json")
+        self.normalize_trad_char_dict = self.load_dict("trad2trad", "norm_trad_char.json")
+        self.normalize_trad_phrase_dict = self.load_dict("trad2trad", "norm_trad_phrase.json")
+        self.s2t_phrases_dict = self.load_dict("simp2trad", "s2t_phrases.json")
         self.trad_phrases = set(self.s2t_phrases_dict.values())
-        self.s2t_chars_dict = self.load_dict("s2t_chars.json")
-        self.s2t_amb_dict = self.load_dict("s2t_amb.json")
-        self.t2tw_phrases_dict = self.load_dict("t2tw_phrases.json")
-        self.t2tw_chars_dict = self.load_dict("t2tw_chars.json")
-        self.tw2t_phrases_dict = self.load_dict("tw2t_phrases.json")
+        self.s2t_chars_dict = self.load_dict("simp2trad", "s2t_chars.json")
+        self.s2t_one2many_dict = self.load_dict("simp2trad", "s2t_one2many.json")
+        self.t2tw_phrases_dict = self.load_dict("tw", "t2tw_phrases.json")
+        self.t2tw_chars_dict = self.load_dict("tw", "t2tw_chars.json")
+        self.tw2t_phrases_dict = self.load_dict("tw", "tw2t_phrases.json")
         self.tw_phrases = set(self.tw2t_phrases_dict.values())
-        self.tw2t_amb_dict = self.load_dict("tw2t_amb.json")
-        self.tw2t_chars_dict = self.load_dict("tw2t_chars.json")
-        self.t2s_phrases_dict = self.load_dict("t2s_phrases.json")
-        self.t2s_amb_dict = self.load_dict("t2s_amb.json")
-        self.t2s_chars_dict = self.load_dict("t2s_chars.json")
+        self.tw2t_one2many_dict = self.load_dict("tw", "tw2t_one2many.json")
+        self.tw2t_chars_dict = self.load_dict("tw", "tw2t_chars.json")
+        self.t2s_phrases_dict = self.load_dict("trad2simp", "t2s_phrases.json")
+        self.t2s_one2many_dict = self.load_dict("trad2simp", "t2s_one2many.json")
+        self.t2s_chars_dict = self.load_dict("trad2simp", "t2s_chars.json")
 
-        self.merged_modernize_simp_char_dict = self._merge_dicts(
+        self.merged_modern_simp_char_dict = self._merge_dicts(
             self.modernize_simp_char_dict,
-            self.include_dicts.get("modernize_simplified"),
-            self.exclude_lists.get("modernize_simplified"),
+            self.include_dicts.get("modern_simplified"),
+            self.exclude_lists.get("modern_simplified"),
         )
-        self.merged_modernize_simp_phrase_dict = self._merge_dicts(
+        self.merged_modern_simp_phrase_dict = self._merge_dicts(
             self.modernize_simp_phrase_dict,
-            self.include_dicts.get("modernize_simplified"),
-            self.exclude_lists.get("modernize_simplified"),
+            self.include_dicts.get("modern_simplified"),
+            self.exclude_lists.get("modern_simplified"),
         )
 
-        self.merged_normalize_simp_char_dict = self._merge_dicts(
+        self.merged_norm_simp_char_dict = self._merge_dicts(
             self.normalize_simp_char_dict,
-            self.include_dicts.get("normalize_simplified"),
-            self.exclude_lists.get("normalize_simplified"),
+            self.include_dicts.get("norm_simplified"),
+            self.exclude_lists.get("norm_simplified"),
         )
-        self.merged_normalize_simp_phrase_dict = self._merge_dicts(
+        self.merged_norm_simp_phrase_dict = self._merge_dicts(
             self.normalize_simp_phrase_dict,
-            self.include_dicts.get("normalize_simplified"),
-            self.exclude_lists.get("normalize_simplified"),
+            self.include_dicts.get("norm_simplified"),
+            self.exclude_lists.get("norm_simplified"),
         )
 
-        self.merged_modernize_trad_phrase_dict = self._merge_dicts(
+        self.merged_modern_trad_phrase_dict = self._merge_dicts(
             self.modernize_trad_phrase_dict,
-            self.include_dicts.get("modernize_traditional"),
-            self.exclude_lists.get("modernize_traditional"),
+            self.include_dicts.get("modern_traditional"),
+            self.exclude_lists.get("modern_traditional"),
         )
-        self.merged_modernize_trad_char_dict = self._merge_dicts(
+        self.merged_modern_trad_char_dict = self._merge_dicts(
             self.modernize_trad_char_dict,
-            self.include_dicts.get("modernize_traditional"),
-            self.exclude_lists.get("modernize_traditional"),
+            self.include_dicts.get("modern_traditional"),
+            self.exclude_lists.get("modern_traditional"),
         )
 
-        self.merged_normalize_trad_phrase_dict = self._merge_dicts(
+        self.merged_norm_trad_phrase_dict = self._merge_dicts(
             self.normalize_trad_phrase_dict,
-            self.include_dicts.get("normalize_traditional"),
-            self.exclude_lists.get("normalize_traditional"),
+            self.include_dicts.get("norm_traditional"),
+            self.exclude_lists.get("norm_traditional"),
         )
-        self.merged_normalize_trad_char_dict = self._merge_dicts(
+        self.merged_norm_trad_char_dict = self._merge_dicts(
             self.normalize_trad_char_dict,
-            self.include_dicts.get("normalize_traditional"),
-            self.exclude_lists.get("normalize_traditional"),
+            self.include_dicts.get("norm_traditional"),
+            self.exclude_lists.get("norm_traditional"),
         )
 
         self.merged_s2t_phrases_dict = self._merge_dicts(
@@ -101,8 +101,8 @@ class CustomScriptConversionDictionaries:
             self.exclude_lists.get("detaiwanize_phrases"),
         )
 
-        self.merged_t2s_amb_dict = self._merge_dicts(
-            self.t2s_amb_dict,
+        self.merged_t2s_one2many_dict = self._merge_dicts(
+            self.t2s_one2many_dict,
             self.include_dicts.get("simplify_one_to_many"),
             self.exclude_lists.get("simplify_one_to_many"),
         )
@@ -119,8 +119,9 @@ class CustomScriptConversionDictionaries:
             self.exclude_lists.get("detaiwanize_characters"),
         )
 
-    def load_dict(self, filename: str) -> dict:
-        return FileConversion.json_to_dict(Path(f"../conversion_dictionaries/{filename}"))
+    def load_dict(self, sub_dir:str, filename: str) -> dict:
+        path = Path(f"../conversion_dictionaries/{sub_dir}/{filename}") if sub_dir else Path(f"../conversion_dictionaries/{filename}")
+        return FileConversion.json_to_dict(path)
 
     def _merge_dicts(
         self,
@@ -210,11 +211,11 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
     ) -> str:
         phrases_replaced = ReplacementUtils.word_replace_over_string(
             sentence,
-            self._merge_dicts(self.merged_normalize_simp_char_dict, include_dict, exclude_list),
+            self._merge_dicts(self.merged_norm_simp_char_dict, include_dict, exclude_list),
         )
         return ReplacementUtils.char_replace_over_string(
             phrases_replaced,
-            self._merge_dicts(self.merged_normalize_simp_phrase_dict, include_dict, exclude_list),
+            self._merge_dicts(self.merged_norm_simp_phrase_dict, include_dict, exclude_list),
         )
 
     def normalize_simplified_list(
@@ -247,8 +248,8 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
         return new_sentence
 
     def modernize_traditional(self, sentence: str) -> str:
-        phrases_replaced = ReplacementUtils.word_replace_over_string(sentence, self.merged_modernize_trad_phrase_dict)
-        return ReplacementUtils.char_replace_over_string(phrases_replaced, self.merged_modernize_trad_char_dict)
+        phrases_replaced = ReplacementUtils.word_replace_over_string(sentence, self.merged_modern_trad_phrase_dict)
+        return ReplacementUtils.char_replace_over_string(phrases_replaced, self.merged_modern_trad_char_dict)
 
     def modernize_traditional_list(
         self,
@@ -283,8 +284,8 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
         self,
         sentence: str,
     ) -> str:
-        phrases_replaced = ReplacementUtils.word_replace_over_string(sentence, self.merged_normalize_trad_phrase_dict)
-        return ReplacementUtils.char_replace_over_string(phrases_replaced, self.merged_normalize_trad_char_dict)
+        phrases_replaced = ReplacementUtils.word_replace_over_string(sentence, self.merged_norm_trad_phrase_dict)
+        return ReplacementUtils.char_replace_over_string(phrases_replaced, self.merged_norm_trad_char_dict)
 
     def normalize_traditional_list(
         self,
@@ -385,7 +386,7 @@ class ToTwTradScriptConversion(CustomScriptConversion):
         include_dict: dict | None = None,
         exclude_list: list | None = None,
     ) -> str:
-        amb_dict = self._merge_dicts(self.s2t_amb_dict, include_dict, exclude_list)
+        amb_dict = self._merge_dicts(self.s2t_one2many_dict, include_dict, exclude_list)
         chars_in_sentence = [char for char in amb_dict if char in sentence]
         cc_converted_sentence = self.get_converted_opencc_sentence(sentence, "s2twp")
         new_sentence = sentence
@@ -461,8 +462,8 @@ class ToTwTradScriptConversion(CustomScriptConversion):
 
         sentence = self.modernize_simplified(
             sentence,
-            include_dicts.get("modernize_simplified"),
-            exclude_lists.get("modernize_simplified"),
+            include_dicts.get("modern_simplified"),
+            exclude_lists.get("modern_simplified"),
         )
 
         sentence = self.normalize_simp_one_to_many(
@@ -473,8 +474,8 @@ class ToTwTradScriptConversion(CustomScriptConversion):
         )
         sentence = self.normalize_simplified(
             sentence,
-            include_dicts.get("normalize_simplified"),
-            exclude_lists.get("normalize_simplified"),
+            include_dicts.get("norm_simplified"),
+            exclude_lists.get("norm_simplified"),
         )
         sentence = self.traditionalize_phrases(
             sentence,
@@ -502,14 +503,14 @@ class ToTwTradScriptConversion(CustomScriptConversion):
         sentence = self.modernize_traditional_list(
             sentence,
             indexes_to_protect,
-            include_dicts.get("modernize_traditional"),
-            exclude_lists.get("modernize_traditional"),
+            include_dicts.get("modern_traditional"),
+            exclude_lists.get("modern_traditional"),
         )
         sentence = self.normalize_traditional_list(
             sentence,
             indexes_to_protect,
-            include_dicts.get("normalize_traditional"),
-            exclude_lists.get("normalize_traditional"),
+            include_dicts.get("norm_traditional"),
+            exclude_lists.get("norm_traditional"),
         )
         sentence, indexes_to_protect = self.taiwanize_phrases(
             sentence,
@@ -543,7 +544,7 @@ class ToSimpScriptConversion(CustomScriptConversion):
         include_dict: dict | None = None,
         exclude_list: list | None = None,
     ) -> str:
-        amb_dict = self._merge_dicts(self.tw2t_amb_dict, include_dict, exclude_list)
+        amb_dict = self._merge_dicts(self.tw2t_one2many_dict, include_dict, exclude_list)
         sentence_chars_in_dict = [char for char in amb_dict if char in sentence]
         cc_converted_sentence = self.get_converted_opencc_sentence(sentence, "tw2sp")
         new_sentence = sentence
@@ -590,10 +591,10 @@ class ToSimpScriptConversion(CustomScriptConversion):
         indexes_to_protect: list[tuple[int, int]],
         improved_one_to_many: bool,
     ) -> str:
-        amb_dict = self.merged_t2s_amb_dict
+        amb_dict = self.merged_t2s_one2many_dict
         new_sentence = sentence
         if improved_one_to_many:
-            new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_t2s_ambiguous_mappings)
+            new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_t2s_one2many_mappings)
         else:
             new_sentence = self.map_one_to_many_opencc(new_sentence, amb_dict, "tw2sp")
         return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
@@ -670,14 +671,14 @@ class ToSimpScriptConversion(CustomScriptConversion):
         sentence = self.modernize_simplified_list(
             sentence,
             indexes_to_protect,
-            include_dicts.get("modernize_simplified"),
-            exclude_lists.get("modernize_simplified"),
+            include_dicts.get("modern_simplified"),
+            exclude_lists.get("modern_simplified"),
         )
         return self.normalize_simplified_list(
             sentence,
             indexes_to_protect,
-            include_dicts.get("normalize_simplified"),
-            exclude_lists.get("normalize_simplified"),
+            include_dicts.get("norm_simplified"),
+            exclude_lists.get("norm_simplified"),
         )
 
 

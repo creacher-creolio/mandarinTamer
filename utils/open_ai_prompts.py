@@ -34,7 +34,7 @@ def get_openai_response(
     return completion.choices[0].message.content
 
 
-def _ambiguous_mapping(prompt_intent, sentence_label, sentence, token, mapping_dict):
+def _one2many_mapping(prompt_intent, sentence_label, sentence, token, mapping_dict):
     system_context = f"""
     Return as json the best_replacement_token for the token in the sentence based on the options in the mapping_dictionary for {prompt_intent}.
     """
@@ -51,8 +51,8 @@ def _ambiguous_mapping(prompt_intent, sentence_label, sentence, token, mapping_d
     return json_response["best_replacement_token"]
 
 
-def openai_s2t_ambiguous_mappings(sentence, token, mapping_dict):
-    return _ambiguous_mapping(
+def openai_s2t_one2many_mappings(sentence, token, mapping_dict):
+    return _one2many_mapping(
         "conversion from Simplified Mandarin to Traditional Taiwanese Mandarin",
         "sentence",
         sentence,
@@ -61,8 +61,8 @@ def openai_s2t_ambiguous_mappings(sentence, token, mapping_dict):
     )
 
 
-def openai_t2s_ambiguous_mappings(tokenized_sentence, token, mapping_dict):
-    return _ambiguous_mapping(
+def openai_t2s_one2many_mappings(tokenized_sentence, token, mapping_dict):
+    return _one2many_mapping(
         "conversion from Traditional to Simplified Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
@@ -71,8 +71,8 @@ def openai_t2s_ambiguous_mappings(tokenized_sentence, token, mapping_dict):
     )
 
 
-def openai_detaiwanize_ambiguous_mappings(tokenized_sentence, token, mapping_dict):
-    return _ambiguous_mapping(
+def openai_detaiwanize_one2many_mappings(tokenized_sentence, token, mapping_dict):
+    return _one2many_mapping(
         "conversion from Traditional Taiwanese Mandarin to Traditional Hong Kong Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
