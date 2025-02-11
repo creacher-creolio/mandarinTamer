@@ -55,6 +55,7 @@ Taiwan:
 - **Rita J. Lee (李佩蓉)** – PhD in Chinese Literature; Taipei.
 - **Jamie Chang (張汝禎)** - Taipei
 - **Hsin Fang Wu** - Taipei
+- **潘依依 (Elsie)** – Expert in modern and classical Mandarin; Taipei; <https://pse.is/754xk3>
 
 Mainland China:
 
