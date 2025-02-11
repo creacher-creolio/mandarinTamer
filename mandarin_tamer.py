@@ -115,8 +115,12 @@ class CustomScriptConversionDictionaries:
             self.exclude_lists.get("detaiwanize_characters"),
         )
 
-    def load_dict(self, sub_dir:str, filename: str) -> dict:
-        path = Path(f"../conversion_dictionaries/{sub_dir}/{filename}") if sub_dir else Path(f"../conversion_dictionaries/{filename}")
+    def load_dict(self, sub_dir: str, filename: str) -> dict:
+        path = (
+            Path(f"../conversion_dictionaries/{sub_dir}/{filename}")
+            if sub_dir
+            else Path(f"../conversion_dictionaries/{filename}")
+        )
         return FileConversion.json_to_dict(path)
 
     def _merge_dicts(
@@ -161,10 +165,12 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
         return self._replace_over_list_with_sentence(
             sentence,
             indexes_to_protect,
-            self.modernize_simp_char_dict,
-            self.modernize_simp_phrase_dict,
-            include_dict,
-            exclude_list,
+            {
+                "char_dict": self.modernize_simp_char_dict,
+                "phrase_dict": self.modernize_simp_phrase_dict,
+                "include_dict": include_dict,
+                "exclude_list": exclude_list,
+            },
         )
 
     def normalize_simplified(
@@ -192,10 +198,12 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
         return self._replace_over_list_with_sentence(
             sentence,
             indexes_to_protect,
-            self.normalize_simp_char_dict,
-            self.normalize_simp_phrase_dict,
-            include_dict,
-            exclude_list,
+            {
+                "char_dict": self.normalize_simp_char_dict,
+                "phrase_dict": self.normalize_simp_phrase_dict,
+                "include_dict": include_dict,
+                "exclude_list": exclude_list,
+            },
         )
 
     def modernize_traditional(self, sentence: str) -> str:
@@ -212,10 +220,12 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
         return self._replace_over_list_with_sentence(
             sentence,
             indexes_to_protect,
-            self.modernize_trad_char_dict,
-            self.modernize_trad_phrase_dict,
-            include_dict,
-            exclude_list,
+            {
+                "char_dict": self.modernize_trad_char_dict,
+                "phrase_dict": self.modernize_trad_phrase_dict,
+                "include_dict": include_dict,
+                "exclude_list": exclude_list,
+            },
         )
 
     def normalize_traditional(
@@ -235,10 +245,12 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
         return self._replace_over_list_with_sentence(
             sentence,
             indexes_to_protect,
-            self.normalize_trad_char_dict,
-            self.normalize_trad_phrase_dict,
-            include_dict,
-            exclude_list,
+            {
+                "char_dict": self.normalize_trad_char_dict,
+                "phrase_dict": self.normalize_trad_phrase_dict,
+                "include_dict": include_dict,
+                "exclude_list": exclude_list,
+            },
         )
 
     def _replace_over_list(  # noqa: PLR0913
@@ -262,13 +274,18 @@ class CustomScriptConversion(CustomScriptConversionDictionaries):
         self,
         sentence: str,
         indexes_to_protect: list[tuple[int, int]],
-        char_dict: dict,
-        phrase_dict: dict,
-        include_dict: dict | None = None,
-        exclude_list: list | None = None,
+        dicts: dict,
     ) -> str:
-        char_dict = self._merge_dicts(char_dict, include_dict, exclude_list)
-        phrase_dict = self._merge_dicts(phrase_dict, include_dict, exclude_list)
+        char_dict = self._merge_dicts(
+            dicts.get("char_dict", {}),
+            dicts.get("include_dict", {}),
+            dicts.get("exclude_list", []),
+        )
+        phrase_dict = self._merge_dicts(
+            dicts.get("phrase_dict", {}),
+            dicts.get("include_dict", {}),
+            dicts.get("exclude_list", []),
+        )
         chars_replaced = ReplacementUtils.char_replace_over_string(sentence, char_dict)
         new_sentence = ReplacementUtils.word_replace_over_string(chars_replaced, phrase_dict)
         return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
@@ -474,9 +491,7 @@ class ToSimpScriptConversion(CustomScriptConversion):
         new_sentence = sentence
         for char in sentence_chars_in_dict:
             if improved_one_to_many:
-                new_sentence = self.map_one_to_many_openai(
-                    new_sentence, amb_dict, openai_detaiwanize_one2many_mappings
-                )
+                new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_detaiwanize_one2many_mappings)
             else:
                 new_sentence = new_sentence.replace(char, cc_converted_sentence[sentence.index(char)])
         return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
