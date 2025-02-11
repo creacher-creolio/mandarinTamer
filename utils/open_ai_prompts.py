@@ -79,3 +79,44 @@ def openai_detaiwanize_one2many_mappings(tokenized_sentence, token, mapping_dict
         token,
         mapping_dict,
     )
+
+
+def openai_modernize_simp_one2many_mappings(tokenized_sentence, token, mapping_dict):
+    return _one2many_mapping(
+        "conversion from Traditional Mandarin to Traditional Taiwanese Mandarin",
+        "tokenized_sentence",
+        tokenized_sentence,
+        token,
+        mapping_dict,
+    )
+
+
+def openai_normalize_simp_one2many_mappings(tokenized_sentence, token, mapping_dict):
+    return _one2many_mapping(
+        # TODO: @crelio - update this prompt
+        "conversion from replacing uncommon words with more common equivalents in Simplified Mandarin",
+        "tokenized_sentence",
+        tokenized_sentence,
+        token,
+        mapping_dict,
+    )
+
+
+def openai_modernize_trad_one2many_mappings(tokenized_sentence, token, mapping_dict):
+    return _one2many_mapping(
+        "conversion from outdated/archaic Traditional Mandarin to Modern Traditional Mandarin",
+        "tokenized_sentence",
+        tokenized_sentence,
+        token,
+        mapping_dict,
+    )
+
+
+def openai_normalize_trad_one2many_mappings(tokenized_sentence, token, mapping_dict):
+    return _one2many_mapping(
+        "conversion from replacing uncommon words with more common equivalents in Traditional Mandarin",
+        "tokenized_sentence",
+        tokenized_sentence,
+        token,
+        mapping_dict,
+    )
