@@ -64,26 +64,20 @@ class ScriptConverter:
         dicts = self.dicts[config.name]
         new_sentence = sentence
 
-        # Keep existing indexes unless we have a non-empty phrase dictionary AND it's a script conversion step
-        phrase_indexes = indexes_to_protect
-
-        # Only reset indexes for script conversion steps (not modernization/normalization)
+        # Determine if we should reset indexes for script conversion steps
         should_reset_indexes = (
-            config.name in ["s2t", "t2s", "t2tw", "tw2t"]  # script conversion steps
-            and dicts["phrase"]
-            and any(dicts["phrase"].values())
+            config.name in ["s2t", "t2s", "t2tw", "tw2t"] and dicts["phrase"] and any(dicts["phrase"].values())
         )
-        if should_reset_indexes:
-            phrase_indexes = None  # Reset only if we have phrases to process in a script conversion step
+        phrase_indexes = None if should_reset_indexes else indexes_to_protect
 
-        # Apply phrase conversion only if phrase dictionary is not empty
+        # Apply phrase conversion if dictionary is not empty
         if dicts["phrase"] and any(dicts["phrase"].values()):
             operation = ConversionOperation(new_sentence, None if should_reset_indexes else phrase_indexes)
             new_sentence, new_indexes = operation.apply_phrase_conversion(dicts["phrase"])
             if should_reset_indexes:
                 phrase_indexes = new_indexes
 
-        # Apply one-to-many conversion if available, preserving phrase indexes
+        # Apply one-to-many conversion if available
         if dicts["one2many"] and (config.openai_func or config.opencc_config):
             operation = ConversionOperation(new_sentence, phrase_indexes)
             new_sentence = operation.apply_one_to_many_conversion(
@@ -93,10 +87,9 @@ class ScriptConverter:
                 config.opencc_config if not improved_one_to_many else None,
             )
 
-        # Apply character conversion last, preserving phrase indexes
+        # Apply character conversion
         operation = ConversionOperation(new_sentence, phrase_indexes)
-        sent, ind = operation.apply_char_conversion(dicts["char"])
-        return sent, ind
+        return operation.apply_char_conversion(dicts["char"])
 
 
 class ToTwTradConverter(ScriptConverter):

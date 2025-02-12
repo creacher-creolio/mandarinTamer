@@ -84,12 +84,11 @@ class ConversionOperation:
                 if char in new_sentence:
                     new_sentence = new_sentence.replace(char, cc_converted[new_sentence.index(char)])
 
-        new_sentence = (
+        return (
             ReplacementUtils.revert_protected_indexes(self.sentence, new_sentence, self.indexes_to_protect)
             if self.indexes_to_protect
             else new_sentence
         )
-        return new_sentence
 
     def apply_char_conversion(self, char_dict: dict) -> tuple[str, list[tuple[int, int]] | None]:
         """Apply character-level conversion."""
@@ -97,6 +96,7 @@ class ConversionOperation:
         new_sentence = self.sentence
         for char in chars_in_sentence:
             new_sentence = new_sentence.replace(char, char_dict[char])
+
         final_sentence = (
             ReplacementUtils.revert_protected_indexes(self.sentence, new_sentence, self.indexes_to_protect)
             if self.indexes_to_protect
