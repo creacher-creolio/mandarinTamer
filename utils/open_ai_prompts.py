@@ -53,7 +53,7 @@ def _one2many_mapping(prompt_intent, sentence_label, sentence, token, mapping_di
 
 def openai_s2t_one2many_mappings(sentence, token, mapping_dict):
     return _one2many_mapping(
-        "conversion from Simplified Mandarin to Traditional Taiwanese Mandarin",
+        "replacing Simplified Mandarin with Traditional Taiwanese Mandarin",
         "sentence",
         sentence,
         token,
@@ -63,17 +63,7 @@ def openai_s2t_one2many_mappings(sentence, token, mapping_dict):
 
 def openai_t2s_one2many_mappings(tokenized_sentence, token, mapping_dict):
     return _one2many_mapping(
-        "conversion from Traditional to Simplified Mandarin",
-        "tokenized_sentence",
-        tokenized_sentence,
-        token,
-        mapping_dict,
-    )
-
-
-def openai_detaiwanize_one2many_mappings(tokenized_sentence, token, mapping_dict):
-    return _one2many_mapping(
-        "conversion from Traditional Taiwanese Mandarin to Traditional Hong Kong Mandarin",
+        "replacing Traditional Mandarin with Simplified Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
         token,
@@ -83,7 +73,7 @@ def openai_detaiwanize_one2many_mappings(tokenized_sentence, token, mapping_dict
 
 def openai_modernize_simp_one2many_mappings(tokenized_sentence, token, mapping_dict):
     return _one2many_mapping(
-        "conversion from outdated/archaic Simplified Mandarin to Modern Simplified Mandarin",
+        "replacing outdated/archaic Simplified Mandarin with Modern Simplified Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
         token,
@@ -93,8 +83,7 @@ def openai_modernize_simp_one2many_mappings(tokenized_sentence, token, mapping_d
 
 def openai_normalize_simp_one2many_mappings(tokenized_sentence, token, mapping_dict):
     return _one2many_mapping(
-        # TODO: @crelio - update this prompt
-        "conversion from replacing uncommon words with more common equivalents in Simplified Mandarin",
+        "replacing uncommon words with more common equivalents in Simplified Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
         token,
@@ -104,7 +93,7 @@ def openai_normalize_simp_one2many_mappings(tokenized_sentence, token, mapping_d
 
 def openai_modernize_trad_one2many_mappings(tokenized_sentence, token, mapping_dict):
     return _one2many_mapping(
-        "conversion from outdated/archaic Traditional Mandarin to Modern Traditional Mandarin",
+        "replacing outdated/archaic Traditional Mandarin with Modern Traditional Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
         token,
@@ -114,7 +103,27 @@ def openai_modernize_trad_one2many_mappings(tokenized_sentence, token, mapping_d
 
 def openai_normalize_trad_one2many_mappings(tokenized_sentence, token, mapping_dict):
     return _one2many_mapping(
-        "conversion from replacing uncommon words with more common equivalents in Traditional Mandarin",
+        "replacing uncommon words with more common equivalents in Traditional Mandarin",
+        "tokenized_sentence",
+        tokenized_sentence,
+        token,
+        mapping_dict,
+    )
+
+
+def openai_taiwanize_one2many_mappings(tokenized_sentence, token, mapping_dict):
+    return _one2many_mapping(
+        "replacing Traditional Mandarin with Traditional Taiwanese Mandarin",
+        "tokenized_sentence",
+        tokenized_sentence,
+        token,
+        mapping_dict,
+    )
+
+
+def openai_detaiwanize_one2many_mappings(tokenized_sentence, token, mapping_dict):
+    return _one2many_mapping(
+        "replacing Traditional Taiwanese Mandarin with Traditional Hong Kong Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
         token,
