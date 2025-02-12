@@ -91,6 +91,31 @@ class ScriptConverter:
         operation = ConversionOperation(new_sentence, phrase_indexes)
         return operation.apply_char_conversion(dicts["char"])
 
+    def convert_sentence(
+        self,
+        sentence: str,
+        conversion_sequence: list[str],
+        improved_one_to_many: bool = False,
+        include_dicts: dict | None = None,
+        exclude_lists: dict | None = None,
+    ) -> str:
+        """Convert a sentence using a specified conversion sequence."""
+        # Initialize with new dictionaries if provided
+        if include_dicts or exclude_lists:
+            self.include_dicts = include_dicts or {}
+            self.exclude_lists = exclude_lists or {}
+
+        # Apply conversion sequence
+        current_indexes = None
+        for config_name in conversion_sequence:
+            sentence, current_indexes = self.apply_conversion(
+                sentence,
+                CONVERSION_CONFIGS[config_name],
+                current_indexes,
+                improved_one_to_many=improved_one_to_many,
+            )
+        return sentence
+
 
 class ToTwTradConverter(ScriptConverter):
     """Converter for Traditional Taiwanese script."""
@@ -112,21 +137,13 @@ class ToTwTradConverter(ScriptConverter):
         exclude_lists: dict | None = None,
     ) -> str:
         """Convert to Traditional Taiwanese script."""
-        # Initialize with new dictionaries if provided
-        if include_dicts or exclude_lists:
-            self.include_dicts = include_dicts or {}
-            self.exclude_lists = exclude_lists or {}
-
-        # Apply conversion sequence
-        current_indexes = None
-        for config_name in self.CONVERSION_SEQUENCE:
-            sentence, current_indexes = self.apply_conversion(
-                sentence,
-                CONVERSION_CONFIGS[config_name],
-                current_indexes,
-                improved_one_to_many=improved_one_to_many,
-            )
-        return sentence
+        return self.convert_sentence(
+            sentence,
+            self.CONVERSION_SEQUENCE,
+            improved_one_to_many,
+            include_dicts,
+            exclude_lists,
+        )
 
 
 class ToSimpConverter(ScriptConverter):
@@ -149,21 +166,13 @@ class ToSimpConverter(ScriptConverter):
         exclude_lists: dict | None = None,
     ) -> str:
         """Convert to Simplified script."""
-        # Initialize with new dictionaries if provided
-        if include_dicts or exclude_lists:
-            self.include_dicts = include_dicts or {}
-            self.exclude_lists = exclude_lists or {}
-
-        # Apply conversion sequence
-        current_indexes = None
-        for config_name in self.CONVERSION_SEQUENCE:
-            sentence, current_indexes = self.apply_conversion(
-                sentence,
-                CONVERSION_CONFIGS[config_name],
-                current_indexes,
-                improved_one_to_many=improved_one_to_many,
-            )
-        return sentence
+        return self.convert_sentence(
+            sentence,
+            self.CONVERSION_SEQUENCE,
+            improved_one_to_many,
+            include_dicts,
+            exclude_lists,
+        )
 
 
 def convert_mandarin_script(
