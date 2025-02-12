@@ -8,7 +8,10 @@ sys.path.append("..")
 from utils.file_conversion import FileConversion
 from utils.open_ai_prompts import (
     openai_detaiwanize_one2many_mappings,
-    openai_s2t_one2many_mappings,
+    openai_modernize_simp_one2many_mappings,
+    openai_modernize_trad_one2many_mappings,
+    openai_normalize_simp_one2many_mappings,
+    openai_normalize_trad_one2many_mappings,
     openai_t2s_one2many_mappings,
 )
 from utils.replacement_by_dictionary import ReplacementUtils
@@ -19,12 +22,16 @@ class CustomScriptConversionDictionaries:
         self.include_dicts = include_dicts or {}
         self.exclude_lists = exclude_lists or {}
 
+        self.modernize_simp_one2many_dict = self.load_dict("simp2simp", "modern_simp_one2many.json")
         self.modernize_simp_char_dict = self.load_dict("simp2simp", "modern_simp_char.json")
         self.modernize_simp_phrase_dict = self.load_dict("simp2simp", "modern_simp_phrase.json")
+        self.normalize_simp_one2many_dict = self.load_dict("simp2simp", "norm_simp_one2many.json")
         self.normalize_simp_char_dict = self.load_dict("simp2simp", "norm_simp_char.json")
         self.normalize_simp_phrase_dict = self.load_dict("simp2simp", "norm_simp_phrase.json")
+        self.modernize_trad_one2many_dict = self.load_dict("trad2trad", "modern_trad_one2many.json")
         self.modernize_trad_char_dict = self.load_dict("trad2trad", "modern_trad_char.json")
         self.modernize_trad_phrase_dict = self.load_dict("trad2trad", "modern_trad_phrase.json")
+        self.normalize_trad_one2many_dict = self.load_dict("trad2trad", "norm_trad_one2many.json")
         self.normalize_trad_char_dict = self.load_dict("trad2trad", "norm_trad_char.json")
         self.normalize_trad_phrase_dict = self.load_dict("trad2trad", "norm_trad_phrase.json")
         self.s2t_phrases_dict = self.load_dict("simp2trad", "s2t_phrases.json")
@@ -139,6 +146,21 @@ class CustomScriptConversionDictionaries:
 
 
 class CustomScriptConversion(CustomScriptConversionDictionaries):
+    def one_to_many_conversion(
+        self, sentence, improved_one_to_many, openai_func, one2many_dict, include_dict=None, exclude_list=None
+    ) -> str:
+        one2many_dict = self._merge_dicts(one2many_dict, include_dict, exclude_list)
+        chars_in_sentence = [char for char in one2many_dict if char in sentence]
+        cc_converted_sentence = self.get_converted_opencc_sentence(sentence, "s2twp")
+        new_sentence = sentence
+        if improved_one_to_many:
+            new_sentence = self.map_one_to_many_openai(new_sentence, one2many_dict, openai_func)
+        # TODO: update prompt
+        else:
+            for char in chars_in_sentence:
+                new_sentence = new_sentence.replace(char, cc_converted_sentence[sentence.index(char)])
+        return new_sentence
+
     def modernize_simplified(
         self,
         sentence: str,
@@ -341,14 +363,14 @@ class ToTwTradScriptConversion(CustomScriptConversion):
         include_dict: dict | None = None,
         exclude_list: list | None = None,
     ) -> str:
-        amb_dict = self._merge_dicts(self.s2t_one2many_dict, include_dict, exclude_list)
-        chars_in_sentence = [char for char in amb_dict if char in sentence]
+        one2many_dict = self._merge_dicts(self.s2t_one2many_dict, include_dict, exclude_list)
+        chars_in_sentence = [char for char in one2many_dict if char in sentence]
         cc_converted_sentence = self.get_converted_opencc_sentence(sentence, "s2twp")
         new_sentence = sentence
-        for char in chars_in_sentence:
-            if improved_one_to_many:
-                new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_s2t_one2many_mappings)
-            else:
+        if improved_one_to_many:
+            new_sentence = self.map_one_to_many_openai(new_sentence, one2many_dict, openai_t2s_one2many_mappings)
+        else:
+            for char in chars_in_sentence:
                 new_sentence = new_sentence.replace(char, cc_converted_sentence[sentence.index(char)])
         return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
 
@@ -407,11 +429,28 @@ class ToTwTradScriptConversion(CustomScriptConversion):
     ) -> str:
         include_dicts = include_dicts or {}
         exclude_lists = exclude_lists or {}
+        sentence = self.one_to_many_conversion(
+            sentence,
+            improved_one_to_many,
+            openai_modernize_simp_one2many_mappings,
+            self.modernize_simp_one2many_dict,
+            include_dicts.get("modernize_simplified_one2many"),
+            exclude_lists.get("modernize_simplified_one2many"),
+        )
 
         sentence = self.modernize_simplified(
             sentence,
             include_dicts.get("modern_simplified"),
             exclude_lists.get("modern_simplified"),
+        )
+        # normalize_simp_one2many_dict
+        sentence = self.one_to_many_conversion(
+            sentence,
+            improved_one_to_many,
+            openai_normalize_simp_one2many_mappings,
+            self.normalize_simp_one2many_dict,
+            include_dicts.get("normalize_simp_one2many"),
+            exclude_lists.get("normalize_simp_one2many"),
         )
         sentence = self.normalize_simplified(
             sentence,
@@ -485,14 +524,16 @@ class ToSimpScriptConversion(CustomScriptConversion):
         include_dict: dict | None = None,
         exclude_list: list | None = None,
     ) -> str:
-        amb_dict = self._merge_dicts(self.tw2t_one2many_dict, include_dict, exclude_list)
-        sentence_chars_in_dict = [char for char in amb_dict if char in sentence]
+        one2many_dict = self._merge_dicts(self.tw2t_one2many_dict, include_dict, exclude_list)
+        sentence_chars_in_dict = [char for char in one2many_dict if char in sentence]
         cc_converted_sentence = self.get_converted_opencc_sentence(sentence, "tw2sp")
         new_sentence = sentence
-        for char in sentence_chars_in_dict:
-            if improved_one_to_many:
-                new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_detaiwanize_one2many_mappings)
-            else:
+        if improved_one_to_many:
+            new_sentence = self.map_one_to_many_openai(
+                new_sentence, one2many_dict, openai_detaiwanize_one2many_mappings
+            )
+        else:
+            for char in sentence_chars_in_dict:
                 new_sentence = new_sentence.replace(char, cc_converted_sentence[sentence.index(char)])
         return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
 
@@ -532,12 +573,12 @@ class ToSimpScriptConversion(CustomScriptConversion):
         indexes_to_protect: list[tuple[int, int]],
         improved_one_to_many: bool,
     ) -> str:
-        amb_dict = self.merged_t2s_one2many_dict
+        one2many_dict = self.merged_t2s_one2many_dict
         new_sentence = sentence
         if improved_one_to_many:
-            new_sentence = self.map_one_to_many_openai(new_sentence, amb_dict, openai_t2s_one2many_mappings)
+            new_sentence = self.map_one_to_many_openai(new_sentence, one2many_dict, openai_t2s_one2many_mappings)
         else:
-            new_sentence = self.map_one_to_many_opencc(new_sentence, amb_dict, "tw2sp")
+            new_sentence = self.map_one_to_many_opencc(new_sentence, one2many_dict, "tw2sp")
         return ReplacementUtils.revert_protected_indexes(sentence, new_sentence, indexes_to_protect)
 
     def simplify_characters(
@@ -563,8 +604,23 @@ class ToSimpScriptConversion(CustomScriptConversion):
     ) -> str:
         include_dicts = include_dicts or {}
         exclude_lists = exclude_lists or {}
-
+        sentence = self.one_to_many_conversion(
+            sentence,
+            improved_one_to_many,
+            openai_modernize_trad_one2many_mappings,
+            self.modernize_trad_one2many_dict,
+            include_dicts.get("modernize_traditional_one_to_many"),
+            exclude_lists.get("modernize_traditional_one_to_many"),
+        )
         sentence = self.modernize_traditional(sentence)
+        sentence = self.one_to_many_conversion(
+            sentence,
+            improved_one_to_many,
+            openai_normalize_trad_one2many_mappings,
+            self.normalize_trad_one2many_dict,
+            include_dicts.get("normalize_traditional_one_to_many"),
+            exclude_lists.get("normalize_traditional_one_to_many"),
+        )
         sentence = self.normalize_traditional(sentence)
         sentence = self.detaiwanize_phrases(sentence)
 
