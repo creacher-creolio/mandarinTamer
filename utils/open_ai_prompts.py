@@ -83,7 +83,7 @@ def openai_detaiwanize_one2many_mappings(tokenized_sentence, token, mapping_dict
 
 def openai_modernize_simp_one2many_mappings(tokenized_sentence, token, mapping_dict):
     return _one2many_mapping(
-        "conversion from Traditional Mandarin to Traditional Taiwanese Mandarin",
+        "conversion from outdated/archaic Simplified Mandarin to Modern Simplified Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
         token,
