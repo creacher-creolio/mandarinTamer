@@ -126,7 +126,7 @@ class ToTwTradConverter(ScriptConverter):
         exclude_lists: dict | None = None,
         modernize: bool = True,
         normalize: bool = True,
-        taiwanization: bool = False,
+        taiwanization: bool = True,
     ):
         super().__init__(include_dicts, exclude_lists)
         self.modernize = modernize
