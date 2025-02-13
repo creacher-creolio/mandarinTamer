@@ -29,6 +29,7 @@ class ReplacementUtils:
     @staticmethod
     def get_indexes_to_protect_from_list(sentence: str, dictionary: dict) -> list[tuple[int, int]]:
         indexes_to_protect = []
+
         for phrase in dictionary:
             start = 0
             while (start := sentence.find(phrase, start)) != -1:
@@ -41,7 +42,21 @@ class ReplacementUtils:
                 end = start + len(phrase)
                 indexes_to_protect.append((start, end))
                 start = end
-        return list(set(indexes_to_protect))
+
+        # Remove duplicates and sort by start index
+        return sorted(set(indexes_to_protect), key=lambda x: x[0])
+
+    @staticmethod
+    def get_ner_indexes(sentence: str, ner_list: list) -> list[tuple[int, int]]:
+        """Get indexes of named entities that should be protected from conversion."""
+        indexes_to_protect = []
+        for entity in ner_list:
+            start = 0
+            while (start := sentence.find(entity, start)) != -1:
+                end = start + len(entity)
+                indexes_to_protect.append((start, end))
+                start = end
+        return sorted(set(indexes_to_protect), key=lambda x: x[0])
 
     @staticmethod
     def _get_phrases_to_skip_from_list(phrases: list[str], dictionary: dict) -> list[str]:

@@ -179,6 +179,7 @@ def convert_mandarin_script(
     sentence: str,
     target_script: str = "",
     improved_one_to_many: bool = False,
+    ner_list: list | None = None,
     include_dicts: dict | None = None,
     exclude_lists: dict | None = None,
 ) -> str:

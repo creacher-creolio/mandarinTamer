@@ -51,7 +51,7 @@ class ConversionOperation:
                 if phrase in phrase_dict:
                     new_sentence = new_sentence.replace(phrase, phrase_dict[phrase])
             indexes_to_protect = (
-                (ReplacementUtils.get_indexes_to_protect_from_list(self.sentence, phrase_dict) or [])
+                ReplacementUtils.get_indexes_to_protect_from_list(self.sentence, phrase_dict)
                 if self.indexes_to_protect is None
                 else self.indexes_to_protect
             )
