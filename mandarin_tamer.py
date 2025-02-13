@@ -1,18 +1,45 @@
 import sys
 
 sys.path.append("..")
-from utils.conversion_config import CONVERSION_CONFIGS, ConversionConfig
+from utils.conversion_config import (
+    CONVERSION_CONFIGS,
+    SCRIPT_CONVERSION_SEQUENCES,
+    SCRIPT_RESET_STEPS,
+    ConversionConfig,
+)
 from utils.conversion_operations import ConversionOperation, DictionaryLoader
 
 
 class ScriptConverter:
     """Base class for script conversion operations."""
 
-    def __init__(self, include_dicts: dict | None = None, exclude_lists: dict | None = None):
+    def __init__(
+        self,
+        target_script: str,
+        include_dicts: dict | None = None,
+        exclude_lists: dict | None = None,
+        modernize: bool = True,
+        normalize: bool = True,
+        taiwanize: bool = True,
+        improved_one_to_many: bool = False,
+    ):
         self.loader = DictionaryLoader()
         self.include_dicts = include_dicts or {}
         self.exclude_lists = exclude_lists or {}
         self.dicts: dict[str, dict] = {}
+        self.modernize = modernize
+        self.normalize = normalize
+        self.taiwanize = taiwanize
+        self.target_script = target_script
+        self.improved_one_to_many = improved_one_to_many
+
+        # Get the appropriate sequence configuration
+        sequence_config = SCRIPT_CONVERSION_SEQUENCES.get(target_script, SCRIPT_CONVERSION_SEQUENCES["simplified"])
+
+        # Build the conversion sequence based on flags
+        self.conversion_sequence = [
+            step for flag, steps in sequence_config for step in steps if flag is True or getattr(self, str(flag), False)
+        ]
 
     def load_config(self, config: ConversionConfig) -> None:
         """Load dictionaries for a conversion configuration."""
@@ -27,7 +54,6 @@ class ScriptConverter:
         sentence: str,
         config: ConversionConfig,
         indexes_to_protect: list[tuple[int, int]] | None = None,
-        improved_one_to_many: bool = False,
     ) -> tuple[str, list[tuple[int, int]] | None]:
         """Apply a conversion configuration to a sentence."""
         if config.name not in self.dicts:
@@ -37,9 +63,7 @@ class ScriptConverter:
         new_sentence = sentence
 
         # Determine if we should reset indexes for script conversion steps
-        should_reset_indexes = (
-            config.name in ["s2t", "t2s", "t2tw", "tw2t"] and dicts["phrase"] and any(dicts["phrase"].values())
-        )
+        should_reset_indexes = config.name in SCRIPT_RESET_STEPS and dicts["phrase"] and any(dicts["phrase"].values())
         phrase_indexes = None if should_reset_indexes else indexes_to_protect
 
         # Apply phrase conversion if dictionary is not empty
@@ -54,147 +78,41 @@ class ScriptConverter:
             operation = ConversionOperation(new_sentence, phrase_indexes)
             new_sentence = operation.apply_one_to_many_conversion(
                 dicts["one2many"],
-                improved_one_to_many,
-                config.openai_func if improved_one_to_many else None,
-                config.opencc_config if not improved_one_to_many else None,
+                self.improved_one_to_many,
+                config.openai_func if self.improved_one_to_many else None,
+                config.opencc_config if not self.improved_one_to_many else None,
             )
 
         # Apply character conversion
         operation = ConversionOperation(new_sentence, phrase_indexes)
         return operation.apply_char_conversion(dicts["char"])
 
-    def convert_sentence(
-        self,
-        sentence: str,
-        conversion_sequence: list[str],
-        improved_one_to_many: bool = False,
-        include_dicts: dict | None = None,
-        exclude_lists: dict | None = None,
-    ) -> str:
-        """Convert a sentence using a specified conversion sequence."""
-        # Initialize with new dictionaries if provided
-        if include_dicts or exclude_lists:
-            self.include_dicts = include_dicts or {}
-            self.exclude_lists = exclude_lists or {}
-
-        # Apply conversion sequence
+    def convert(self, sentence: str) -> str:
+        """Convert text between different Chinese scripts."""
         current_indexes = None
-        for config_name in conversion_sequence:
+        for config_name in self.conversion_sequence:
             sentence, current_indexes = self.apply_conversion(
                 sentence,
                 CONVERSION_CONFIGS[config_name],
                 current_indexes,
-                improved_one_to_many=improved_one_to_many,
             )
         return sentence
-
-
-class ToTwTradConverter(ScriptConverter):
-    """Converter for Traditional Taiwanese script."""
-
-    def __init__(
-        self,
-        include_dicts: dict | None = None,
-        exclude_lists: dict | None = None,
-        modernize: bool = True,
-        normalize: bool = True,
-        taiwanize: bool = True,
-    ):
-        super().__init__(include_dicts, exclude_lists)
-        self.modernize = modernize
-        self.normalize = normalize
-        self.taiwanize = taiwanize
-
-        self.CONVERSION_SEQUENCE = [
-            step
-            for condition, steps in [
-                (self.modernize, ["modernize_simp"]),
-                (self.normalize, ["normalize_simp"]),
-                (True, ["simp_to_trad"]),
-                (self.modernize, ["modernize_trad"]),
-                (self.normalize, ["normalize_trad"]),
-                (self.taiwanize, ["taiwanize"]),
-            ]
-            for step in steps
-            if condition
-        ]
-
-    def convert(
-        self,
-        sentence: str,
-        improved_one_to_many: bool = False,
-        include_dicts: dict | None = None,
-        exclude_lists: dict | None = None,
-    ) -> str:
-        """Convert to Traditional Taiwanese script."""
-        return self.convert_sentence(
-            sentence,
-            self.CONVERSION_SEQUENCE,
-            improved_one_to_many,
-            include_dicts,
-            exclude_lists,
-        )
-
-
-class ToSimpConverter(ScriptConverter):
-    """Converter for Simplified script."""
-
-    def __init__(
-        self,
-        include_dicts: dict | None = None,
-        exclude_lists: dict | None = None,
-        modernize: bool = True,
-        normalize: bool = True,
-    ):
-        super().__init__(include_dicts, exclude_lists)
-        self.modernize = modernize
-        self.normalize = normalize
-
-        self.CONVERSION_SEQUENCE = [
-            step
-            for condition, steps in [
-                (self.modernize, ["modernize_trad"]),
-                (self.normalize, ["normalize_trad"]),
-                (True, ["detaiwanize"]),
-                (True, ["trad_to_simp"]),
-                (self.modernize, ["modernize_simp"]),
-                (self.normalize, ["normalize_simp"]),
-            ]
-            for step in steps
-            if condition
-        ]
-
-    def convert(
-        self,
-        sentence: str,
-        improved_one_to_many: bool = False,
-        include_dicts: dict | None = None,
-        exclude_lists: dict | None = None,
-    ) -> str:
-        """Convert to Simplified script."""
-        return self.convert_sentence(
-            sentence,
-            self.CONVERSION_SEQUENCE,
-            improved_one_to_many,
-            include_dicts,
-            exclude_lists,
-        )
 
 
 def convert_mandarin_script(
     sentence: str,
     target_script: str = "",
-    improved_one_to_many: bool = False,
     modernize: bool = True,
     normalize: bool = True,
     taiwanize: bool = True,
-    ner_list: list | None = None,
-    include_dicts: dict | None = None,
-    exclude_lists: dict | None = None,
+    improved_one_to_many: bool = False,
 ) -> str:
     """Convert text between different Chinese scripts."""
-    if target_script == "tw_traditional":
-        return ToTwTradConverter(include_dicts, exclude_lists, modernize, normalize, taiwanize).convert(
-            sentence, improved_one_to_many
-        )
-    return ToSimpConverter(include_dicts, exclude_lists, modernize, normalize).convert(sentence, improved_one_to_many)
+    converter = ScriptConverter(
+        target_script=target_script,
+        modernize=modernize,
+        normalize=normalize,
+        taiwanize=taiwanize,
+        improved_one_to_many=improved_one_to_many,
+    )
+    return converter.convert(sentence)

@@ -53,3 +53,27 @@ CONVERSION_CONFIGS = {
     "detaiwanize": ConversionConfig("tw", "tw2t", openai_detaiwanize_one2many_mappings, "tw2sp", "detaiwanize"),
     "taiwanize": ConversionConfig("tw", "t2tw", None, "s2twp", "taiwanize"),
 }
+
+
+# Script-specific conversion sequences
+SCRIPT_CONVERSION_SEQUENCES = {
+    "tw_traditional": [
+        ("modernize", ["modernize_simp"]),
+        ("normalize", ["normalize_simp"]),
+        (True, ["simp_to_trad"]),
+        ("modernize", ["modernize_trad"]),
+        ("normalize", ["normalize_trad"]),
+        ("taiwanize", ["taiwanize"]),
+    ],
+    "simplified": [
+        ("modernize", ["modernize_trad"]),
+        ("normalize", ["normalize_trad"]),
+        (True, ["detaiwanize"]),
+        (True, ["trad_to_simp"]),
+        ("modernize", ["modernize_simp"]),
+        ("normalize", ["normalize_simp"]),
+    ],
+}
+
+# Script conversion step flags
+SCRIPT_RESET_STEPS = ["s2t", "t2s", "t2tw", "tw2t"]
