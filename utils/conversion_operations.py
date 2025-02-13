@@ -48,7 +48,7 @@ class ConversionOperation:
         if phrase_dict and any(phrase_dict.values()):
             possible_phrases = ReplacementUtils.get_possible_sentence_phrases(self.sentence)
             for phrase in possible_phrases:
-                if phrase in phrase_dict or phrase in phrase_dict.values():
+                if phrase in phrase_dict:
                     new_sentence = new_sentence.replace(phrase, phrase_dict[phrase])
             indexes_to_protect = (
                 (ReplacementUtils.get_indexes_to_protect_from_list(self.sentence, phrase_dict) or [])

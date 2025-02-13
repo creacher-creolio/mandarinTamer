@@ -183,6 +183,6 @@ def convert_mandarin_script(
     exclude_lists: dict | None = None,
 ) -> str:
     """Convert text between different Chinese scripts."""
-    if target_script == "2twtrad":
+    if target_script == "tw_traditional":
         return ToTwTradConverter(include_dicts, exclude_lists).convert(sentence, improved_one_to_many)
     return ToSimpConverter(include_dicts, exclude_lists).convert(sentence, improved_one_to_many)

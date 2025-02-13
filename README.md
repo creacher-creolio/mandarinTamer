@@ -6,17 +6,12 @@ MandarinTamer is a Python library for converting Mandarin text between Simplifie
 
 MandarinTamer stands out for its ability to convert text without requiring prior knowledge of the input script. It seamlessly handles Simplified, all forms of Traditional, or even mixed-script text, automatically transforming it into your desired script.  
 
-It also offers:  
-
-- **Modernization and Normalization**: Replace rare or outdated terms with more commonly used equivalents.  
-- **AI-Powered Context Awareness**: Uses sentence context with AI to intelligently resolve one-to-many mappings.  
-
 ## Key Features  
 
 - **Simplified ↔ Taiwanese Traditional Conversion**: Handle text transformation with precision, adhering to regional linguistic norms.  
+- **AI-Powered Context Awareness**: Uses sentence context with AI to intelligently resolve one-to-many mappings.  
 - **Context-Free Accuracy**: Achieves high accuracy without requiring metadata or prior knowledge of the input text.  
-- **Modernization and Normalization**: Optionally modernize rare or archaic words into their more commonly used equivalents.  
-- **Taiwanese-Centric Focus**: Optimized for Taiwanese writing conventions, perfect for localization and Taiwanese content.  
+- **Modernization and Normalization**: Optionally replace rare or archaic words with more common used equivalents.  
 - **Open Source**: Built for developers and researchers to adapt, enhance, and integrate into other projects.  
 
 ## Why MandarinTamer?  
@@ -37,7 +32,7 @@ Once installed, you can use it to convert text to Simplified or Taiwanese Tradit
 from mandarinTamer import convert
 
 mandarin_text = "简体字"
-traditional_text = convert(mandarin_text, target_script="traditional_taiwan")
+traditional_text = convert(mandarin_text, target_script="tw_traditional")
 print(traditional_text)
 ```
 
