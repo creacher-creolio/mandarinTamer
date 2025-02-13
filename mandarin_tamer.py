@@ -120,14 +120,32 @@ class ScriptConverter:
 class ToTwTradConverter(ScriptConverter):
     """Converter for Traditional Taiwanese script."""
 
-    CONVERSION_SEQUENCE = [
-        "modernize_simp",
-        "normalize_simp",
-        "simp_to_trad",
-        "modernize_trad",
-        "normalize_trad",
-        "taiwanize",
-    ]
+    def __init__(
+        self,
+        include_dicts: dict | None = None,
+        exclude_lists: dict | None = None,
+        modernize: bool = True,
+        normalize: bool = True,
+        taiwanize: bool = True,
+    ):
+        super().__init__(include_dicts, exclude_lists)
+        self.modernize = modernize
+        self.normalize = normalize
+        self.taiwanize = taiwanize
+
+        self.CONVERSION_SEQUENCE = [
+            step
+            for condition, steps in [
+                (self.modernize, ["modernize_simp"]),
+                (self.normalize, ["normalize_simp"]),
+                (True, ["simp_to_trad"]),
+                (self.modernize, ["modernize_trad"]),
+                (self.normalize, ["normalize_trad"]),
+                (self.taiwanize, ["taiwanize"]),
+            ]
+            for step in steps
+            if condition
+        ]
 
     def convert(
         self,
@@ -149,14 +167,30 @@ class ToTwTradConverter(ScriptConverter):
 class ToSimpConverter(ScriptConverter):
     """Converter for Simplified script."""
 
-    CONVERSION_SEQUENCE = [
-        "modernize_trad",
-        "normalize_trad",
-        "detaiwanize",
-        "trad_to_simp",
-        "modernize_simp",
-        "normalize_simp",
-    ]
+    def __init__(
+        self,
+        include_dicts: dict | None = None,
+        exclude_lists: dict | None = None,
+        modernize: bool = True,
+        normalize: bool = True,
+    ):
+        super().__init__(include_dicts, exclude_lists)
+        self.modernize = modernize
+        self.normalize = normalize
+
+        self.CONVERSION_SEQUENCE = [
+            step
+            for condition, steps in [
+                (self.modernize, ["modernize_trad"]),
+                (self.normalize, ["normalize_trad"]),
+                (True, ["detaiwanize"]),
+                (True, ["trad_to_simp"]),
+                (self.modernize, ["modernize_simp"]),
+                (self.normalize, ["normalize_simp"]),
+            ]
+            for step in steps
+            if condition
+        ]
 
     def convert(
         self,
@@ -179,11 +213,16 @@ def convert_mandarin_script(
     sentence: str,
     target_script: str = "",
     improved_one_to_many: bool = False,
+    modernize: bool = True,
+    normalize: bool = True,
+    taiwanize: bool = True,
     ner_list: list | None = None,
     include_dicts: dict | None = None,
     exclude_lists: dict | None = None,
 ) -> str:
     """Convert text between different Chinese scripts."""
     if target_script == "tw_traditional":
-        return ToTwTradConverter(include_dicts, exclude_lists).convert(sentence, improved_one_to_many)
-    return ToSimpConverter(include_dicts, exclude_lists).convert(sentence, improved_one_to_many)
+        return ToTwTradConverter(include_dicts, exclude_lists, modernize, normalize, taiwanize).convert(
+            sentence, improved_one_to_many
+        )
+    return ToSimpConverter(include_dicts, exclude_lists, modernize, normalize).convert(sentence, improved_one_to_many)
