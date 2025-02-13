@@ -3,31 +3,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from opencc import OpenCC
+from utils.conversion_config import ConversionConfig
 from utils.file_conversion import FileConversion
 from utils.replacement_by_dictionary import ReplacementUtils
-
-
-@dataclass
-class ConversionConfig:
-    """Configuration for a specific conversion operation."""
-
-    sub_dir: str
-    name: str
-    openai_func: Callable | None = None
-    opencc_config: str | None = None
-    include_key: str | None = None
-
-    @property
-    def char_file(self) -> str:
-        return f"{self.name}_chars.json"
-
-    @property
-    def phrase_file(self) -> str:
-        return f"{self.name}_phrases.json"
-
-    @property
-    def one2many_file(self) -> str:
-        return f"{self.name}_one2many.json"
 
 
 @dataclass
