@@ -38,6 +38,6 @@ htmlcov/
 coverage/
 
 # Project-specific
-tests/
+# tests/
 useful_functions/
 data_sources/
