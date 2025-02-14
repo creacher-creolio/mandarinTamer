@@ -3,9 +3,9 @@ import sys
 sys.path.append("..")
 from utils.conversion_config import (
     CONVERSION_CONFIGS,
-    SCRIPT_CONVERSION_SEQUENCES,
     SCRIPT_RESET_STEPS,
     ConversionConfig,
+    get_conversion_steps,
 )
 from utils.conversion_operations import ConversionOperation, DictionaryLoader
 from utils.replacement_by_dictionary import ReplacementUtils
@@ -30,23 +30,21 @@ class ScriptConverter:
         self.include_dicts = include_dicts or {}
         self.exclude_lists = exclude_lists or {}
         self.dicts: dict[str, dict] = {}
-        self.modernize = modernize
-        self.normalize = normalize
-        self.taiwanize = taiwanize
-        self.target_script = target_script
         self.improved_one_to_many = improved_one_to_many
         self.sentence = sentence
 
         # Get NER indexes if list provided
         self.ner_indexes = ReplacementUtils.get_ner_indexes(sentence, ner_list) if ner_list else []
 
-        # Get the appropriate sequence configuration
-        sequence_config = SCRIPT_CONVERSION_SEQUENCES.get(target_script, SCRIPT_CONVERSION_SEQUENCES["zh_cn"])
-
-        # Build the conversion sequence based on flags
-        self.conversion_sequence = [
-            step for flag, steps in sequence_config for step in steps if flag is True or getattr(self, str(flag), False)
-        ]
+        # Get conversion sequence based on flags
+        self.conversion_sequence = get_conversion_steps(
+            target_script,
+            {
+                "modernize": modernize,
+                "normalize": normalize,
+                "taiwanize": taiwanize,
+            },
+        )
 
     def load_config(self, config: ConversionConfig) -> None:
         """Load dictionaries for a conversion configuration."""

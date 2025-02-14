@@ -12,6 +12,14 @@ from utils.open_ai_prompts import (
 
 
 @dataclass
+class ConversionStep:
+    """A single step in the conversion sequence."""
+
+    name: str
+    flag: str | None = None  # The flag that controls this step (None means always run)
+
+
+@dataclass
 class ConversionConfig:
     """Configuration for a specific conversion operation."""
 
@@ -56,24 +64,34 @@ CONVERSION_CONFIGS = {
 
 
 # Script-specific conversion sequences
-SCRIPT_CONVERSION_SEQUENCES = {
+SCRIPT_CONVERSION_SEQUENCES: dict[str, list[ConversionStep]] = {
     "zh_tw": [
-        ("modernize", ["modernize_simp"]),
-        ("normalize", ["normalize_simp"]),
-        (True, ["simp_to_trad"]),
-        ("modernize", ["modernize_trad"]),
-        ("normalize", ["normalize_trad"]),
-        ("taiwanize", ["taiwanize"]),
+        ConversionStep("modernize_simp", "modernize"),
+        ConversionStep("normalize_simp", "normalize"),
+        ConversionStep("simp_to_trad"),  # Core conversion steps have no flag
+        ConversionStep("modernize_trad", "modernize"),
+        ConversionStep("normalize_trad", "normalize"),
+        ConversionStep("taiwanize", "taiwanize"),
     ],
     "zh_cn": [
-        ("modernize", ["modernize_trad"]),
-        ("normalize", ["normalize_trad"]),
-        (True, ["detaiwanize"]),
-        (True, ["trad_to_simp"]),
-        ("modernize", ["modernize_simp"]),
-        ("normalize", ["normalize_simp"]),
+        ConversionStep("modernize_trad", "modernize"),
+        ConversionStep("normalize_trad", "normalize"),
+        ConversionStep("detaiwanize"),  # Core conversion steps have no flag
+        ConversionStep("trad_to_simp"),  # Core conversion steps have no flag
+        ConversionStep("modernize_simp", "modernize"),
+        ConversionStep("normalize_simp", "normalize"),
     ],
 }
+
+
+def get_conversion_steps(
+    target_script: str,
+    flags: dict[str, bool],
+) -> list[str]:
+    """Get the conversion sequence based on target script and flags."""
+    sequence = SCRIPT_CONVERSION_SEQUENCES.get(target_script, SCRIPT_CONVERSION_SEQUENCES["zh_cn"])
+    return [step.name for step in sequence if not step.flag or flags.get(step.flag, False)]
+
 
 # Script conversion step flags
 SCRIPT_RESET_STEPS = ["s2t", "t2s", "t2tw", "tw2t"]
