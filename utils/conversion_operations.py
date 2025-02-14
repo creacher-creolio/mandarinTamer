@@ -20,7 +20,7 @@ class ConversionOperation:
     def apply_phrase_conversion(self, phrase_dict: dict) -> tuple[str, list[tuple[int, int]]]:
         """Apply phrase-level conversion."""
         new_sentence = self.sentence
-        indexes_to_protect = []
+        indexes_to_protect = self.indexes_to_protect or []
 
         # Only process phrases and update indexes if phrase_dict is not empty
         if phrase_dict and any(phrase_dict.values()):
@@ -28,13 +28,13 @@ class ConversionOperation:
             for phrase in possible_phrases:
                 if phrase in phrase_dict:
                     new_sentence = new_sentence.replace(phrase, phrase_dict[phrase])
-            indexes_to_protect = (
-                ReplacementUtils.get_indexes_to_protect_from_list(self.sentence, phrase_dict)
-                if self.indexes_to_protect is None
-                else self.indexes_to_protect
+            # Get new indexes from the dictionary
+            new_indexes = ReplacementUtils.get_indexes_to_protect_from_list(
+                self.sentence, phrase_dict, indexes_to_protect
             )
-        else:
-            indexes_to_protect = self.indexes_to_protect or []
+            # Revert protected indexes after phrase replacements
+            new_sentence = ReplacementUtils.revert_protected_indexes(self.sentence, new_sentence, indexes_to_protect)
+            return new_sentence, new_indexes
 
         return new_sentence, indexes_to_protect
 
@@ -51,6 +51,8 @@ class ConversionOperation:
             raise ValueError(msg)
 
         new_sentence = self.sentence
+        indexes_to_protect = self.indexes_to_protect or []
+
         if use_improved_mode and openai_func:
             for char in mapping_dict:
                 if char in new_sentence:
@@ -62,25 +64,19 @@ class ConversionOperation:
                 if char in new_sentence:
                     new_sentence = new_sentence.replace(char, cc_converted[new_sentence.index(char)])
 
-        return (
-            ReplacementUtils.revert_protected_indexes(self.sentence, new_sentence, self.indexes_to_protect)
-            if self.indexes_to_protect
-            else new_sentence
-        )
+        return ReplacementUtils.revert_protected_indexes(self.sentence, new_sentence, indexes_to_protect)
 
     def apply_char_conversion(self, char_dict: dict) -> tuple[str, list[tuple[int, int]] | None]:
         """Apply character-level conversion."""
         chars_in_sentence = [char for char in char_dict if char in self.sentence]
         new_sentence = self.sentence
+        indexes_to_protect = self.indexes_to_protect or []
+
         for char in chars_in_sentence:
             new_sentence = new_sentence.replace(char, char_dict[char])
 
-        final_sentence = (
-            ReplacementUtils.revert_protected_indexes(self.sentence, new_sentence, self.indexes_to_protect)
-            if self.indexes_to_protect
-            else new_sentence
-        )
-        return final_sentence, self.indexes_to_protect
+        final_sentence = ReplacementUtils.revert_protected_indexes(self.sentence, new_sentence, indexes_to_protect)
+        return final_sentence, indexes_to_protect
 
 
 class DictionaryLoader:

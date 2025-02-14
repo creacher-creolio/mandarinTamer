@@ -69,16 +69,17 @@ class ScriptConverter:
         dicts = self.dicts[config.name]
         new_sentence = sentence
 
+        # Always include NER indexes in current_indexes
+        current_indexes = list(set(current_indexes or []) | set(self.ner_indexes))
+
         # Determine if we should reset indexes for script conversion steps
         should_reset_indexes = config.name in SCRIPT_RESET_STEPS and dicts["phrase"] and any(dicts["phrase"].values())
-        phrase_indexes = None if should_reset_indexes else current_indexes
+        phrase_indexes = self.ner_indexes if should_reset_indexes else current_indexes
 
         # Apply phrase conversion if dictionary is not empty
         if dicts["phrase"] and any(dicts["phrase"].values()):
             operation = ConversionOperation(new_sentence, phrase_indexes)
-            new_sentence, new_indexes = operation.apply_phrase_conversion(dicts["phrase"])
-            if should_reset_indexes:
-                phrase_indexes = new_indexes
+            new_sentence, phrase_indexes = operation.apply_phrase_conversion(dicts["phrase"])
 
         # Apply one-to-many conversion if available
         if dicts["one2many"] and (config.openai_func or config.opencc_config):

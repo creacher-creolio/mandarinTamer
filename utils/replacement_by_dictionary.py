@@ -27,9 +27,10 @@ class ReplacementUtils:
         return ReplacementUtils._get_phrases_to_skip_from_list(possible_sentence_phrases, dictionary)
 
     @staticmethod
-    def get_indexes_to_protect_from_list(sentence: str, dictionary: dict) -> list[tuple[int, int]]:
-        indexes_to_protect = []
-
+    def get_indexes_to_protect_from_list(
+        sentence: str, dictionary: dict, indexes_to_protect: list[tuple[int, int]] | None = None
+    ) -> list[tuple[int, int]]:
+        indexes_to_protect = indexes_to_protect or []
         for phrase in dictionary:
             start = 0
             while (start := sentence.find(phrase, start)) != -1:
