@@ -60,7 +60,7 @@ class ScriptConverter:
         self,
         sentence: str,
         config: ConversionConfig,
-        indexes_to_protect: list[tuple[int, int]] | None = None,
+        current_indexes: list[tuple[int, int]] | None = None,
     ) -> tuple[str, list[tuple[int, int]] | None]:
         """Apply a conversion configuration to a sentence."""
         if config.name not in self.dicts:
@@ -71,11 +71,11 @@ class ScriptConverter:
 
         # Determine if we should reset indexes for script conversion steps
         should_reset_indexes = config.name in SCRIPT_RESET_STEPS and dicts["phrase"] and any(dicts["phrase"].values())
-        phrase_indexes = None if should_reset_indexes else indexes_to_protect
+        phrase_indexes = None if should_reset_indexes else current_indexes
 
         # Apply phrase conversion if dictionary is not empty
         if dicts["phrase"] and any(dicts["phrase"].values()):
-            operation = ConversionOperation(new_sentence, None if should_reset_indexes else phrase_indexes)
+            operation = ConversionOperation(new_sentence, phrase_indexes)
             new_sentence, new_indexes = operation.apply_phrase_conversion(dicts["phrase"])
             if should_reset_indexes:
                 phrase_indexes = new_indexes
