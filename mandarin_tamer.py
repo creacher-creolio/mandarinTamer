@@ -8,6 +8,7 @@ from utils.conversion_config import (
     ConversionConfig,
 )
 from utils.conversion_operations import ConversionOperation, DictionaryLoader
+from utils.replacement_by_dictionary import ReplacementUtils
 
 
 class ScriptConverter:
@@ -15,13 +16,15 @@ class ScriptConverter:
 
     def __init__(
         self,
+        sentence: str,
         target_script: str,
-        include_dicts: dict | None = None,
-        exclude_lists: dict | None = None,
         modernize: bool = True,
         normalize: bool = True,
         taiwanize: bool = True,
         improved_one_to_many: bool = False,
+        ner_list: list | None = None,
+        include_dicts: dict | None = None,
+        exclude_lists: dict | None = None,
     ):
         self.loader = DictionaryLoader()
         self.include_dicts = include_dicts or {}
@@ -32,6 +35,10 @@ class ScriptConverter:
         self.taiwanize = taiwanize
         self.target_script = target_script
         self.improved_one_to_many = improved_one_to_many
+        self.sentence = sentence
+
+        # Get NER indexes if list provided
+        self.ner_indexes = ReplacementUtils.get_ner_indexes(sentence, ner_list) if ner_list else []
 
         # Get the appropriate sequence configuration
         sequence_config = SCRIPT_CONVERSION_SEQUENCES.get(target_script, SCRIPT_CONVERSION_SEQUENCES["zh_cn"])
@@ -87,9 +94,10 @@ class ScriptConverter:
         operation = ConversionOperation(new_sentence, phrase_indexes)
         return operation.apply_char_conversion(dicts["char"])
 
-    def convert(self, sentence: str) -> str:
+    def convert(self) -> str:
         """Convert text between different Chinese scripts."""
-        current_indexes = None
+        current_indexes = self.ner_indexes
+        sentence = self.sentence
         for config_name in self.conversion_sequence:
             sentence, current_indexes = self.apply_conversion(
                 sentence,
@@ -107,13 +115,19 @@ def convert_mandarin_script(
     taiwanize: bool = True,
     improved_one_to_many: bool = False,
     ner_list: list | None = None,
+    include_dicts: dict | None = None,
+    exclude_lists: dict | None = None,
 ) -> str:
     """Convert text between different Chinese scripts."""
     converter = ScriptConverter(
+        sentence=sentence,
         target_script=target_script,
         modernize=modernize,
         normalize=normalize,
         taiwanize=taiwanize,
         improved_one_to_many=improved_one_to_many,
+        ner_list=ner_list,
+        include_dicts=include_dicts,
+        exclude_lists=exclude_lists,
     )
-    return converter.convert(sentence)
+    return converter.convert()

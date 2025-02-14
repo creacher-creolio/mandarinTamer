@@ -32,7 +32,7 @@ Once installed, you can use it to convert text to Simplified or Taiwanese Tradit
 from mandarinTamer import convert
 
 mandarin_text = "简体字"
-traditional_text = convert(mandarin_text, target_script="tw_traditional")
+traditional_text = convert(mandarin_text, target_script="zh_tw")
 print(traditional_text)
 ```
 
