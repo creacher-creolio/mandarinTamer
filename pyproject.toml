@@ -160,3 +160,6 @@ no-lines-before = [
 
 [tool.ruff.lint.mccabe]
 max-complexity = 7
+
+[tool.ruff.lint.pylint]
+max-args = 10

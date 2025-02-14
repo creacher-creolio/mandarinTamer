@@ -3,6 +3,7 @@ import sys
 
 sys.path.append("..")
 from utils.punctuation_utils import punctuation_pattern
+from utils.trie import Trie
 
 
 class ReplacementUtils:
@@ -22,30 +23,39 @@ class ReplacementUtils:
         )
 
     @staticmethod
+    def build_trie_from_dict(dictionary: dict) -> Trie:
+        trie = Trie()
+        for key, value in dictionary.items():
+            trie.insert(key, value)
+        return trie
+
+    @staticmethod
     def get_phrases_to_skip(sentence: str, dictionary: dict) -> list[str]:
-        possible_sentence_phrases = ReplacementUtils.get_possible_sentence_phrases(sentence)
-        return ReplacementUtils._get_phrases_to_skip_from_list(possible_sentence_phrases, dictionary)
+        # Build trie once and cache it
+        trie = ReplacementUtils.build_trie_from_dict(dictionary)
+        matches = trie.find_all_matches(sentence)
+        return list({match[2] for match in matches})  # Using set for unique values
 
     @staticmethod
     def get_indexes_to_protect_from_list(
         sentence: str, dictionary: dict, indexes_to_protect: list[tuple[int, int]] | None = None
     ) -> list[tuple[int, int]]:
-        indexes_to_protect = indexes_to_protect or []
-        for phrase in dictionary:
-            start = 0
-            while (start := sentence.find(phrase, start)) != -1:
-                end = start + len(phrase)
-                indexes_to_protect.append((start, end))
-                start = end
-        for phrase in dictionary.values():
-            start = 0
-            while (start := sentence.find(phrase, start)) != -1:
-                end = start + len(phrase)
-                indexes_to_protect.append((start, end))
-                start = end
+        indexes_to_protect = set(indexes_to_protect or [])
 
-        # Remove duplicates and sort by start index
-        return sorted(set(indexes_to_protect), key=lambda x: x[0])
+        # Build tries for both forward and reverse lookups
+        forward_trie = ReplacementUtils.build_trie_from_dict(dictionary)
+        reverse_dict = {v: k for k, v in dictionary.items()}
+        reverse_trie = ReplacementUtils.build_trie_from_dict(reverse_dict)
+
+        # Get matches from both tries
+        forward_matches = forward_trie.find_all_matches(sentence)
+        reverse_matches = reverse_trie.find_all_matches(sentence)
+
+        # Add all matches to protected indexes
+        for start, end, _ in forward_matches + reverse_matches:
+            indexes_to_protect.add((start, end))
+
+        return sorted(indexes_to_protect)
 
     @staticmethod
     def get_ner_indexes(sentence: str, ner_list: list) -> list[tuple[int, int]]:
@@ -93,15 +103,21 @@ class ReplacementUtils:
 
     @staticmethod
     def char_replace_over_string(sentence: str, dictionary: dict) -> str:
-        return "".join([dictionary.get(char, char) for char in sentence])
+        # Pre-build translation table for faster character replacement
+        trans_table = str.maketrans(dictionary)
+        return sentence.translate(trans_table)
 
     @staticmethod
     def word_replace_over_string(sentence: str, dictionary: dict) -> str:
-        possible_phrases = ReplacementUtils.get_possible_sentence_phrases(sentence)
-        for phrase in possible_phrases:
-            if phrase in dictionary:
-                sentence = sentence.replace(phrase, dictionary[phrase])
-        return sentence
+        trie = ReplacementUtils.build_trie_from_dict(dictionary)
+        matches = sorted(trie.find_all_matches(sentence), reverse=True)
+
+        # Apply replacements from end to start to avoid index issues
+        result = list(sentence)
+        for start, end, replacement in matches:
+            result[start:end] = replacement
+
+        return "".join(result)
 
     @staticmethod
     def revert_protected_indexes(sentence: str, new_sentence: str, indexes_to_protect: list[tuple[int, int]]) -> str:

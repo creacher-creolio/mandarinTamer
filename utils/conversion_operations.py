@@ -17,26 +17,36 @@ class ConversionOperation:
     include_dict: dict | None = None
     exclude_list: list | None = None
 
+    def __init__(self, sentence: str, indexes_to_protect: list[tuple[int, int]] | None = None):
+        self.sentence = sentence
+        self.indexes_to_protect = indexes_to_protect or []
+        self._phrase_trie = None
+
     def apply_phrase_conversion(self, phrase_dict: dict) -> tuple[str, list[tuple[int, int]]]:
         """Apply phrase-level conversion."""
-        new_sentence = self.sentence
-        indexes_to_protect = self.indexes_to_protect or []
+        if not phrase_dict or not any(phrase_dict.values()):
+            return self.sentence, self.indexes_to_protect
 
-        # Only process phrases and update indexes if phrase_dict is not empty
-        if phrase_dict and any(phrase_dict.values()):
-            possible_phrases = ReplacementUtils.get_possible_sentence_phrases(self.sentence)
-            for phrase in possible_phrases:
-                if phrase in phrase_dict:
-                    new_sentence = new_sentence.replace(phrase, phrase_dict[phrase])
-            # Get new indexes from the dictionary
-            new_indexes = ReplacementUtils.get_indexes_to_protect_from_list(
-                self.sentence, phrase_dict, indexes_to_protect
-            )
-            # Revert protected indexes after phrase replacements
-            new_sentence = ReplacementUtils.revert_protected_indexes(self.sentence, new_sentence, indexes_to_protect)
-            return new_sentence, new_indexes
+        # Build trie once
+        if not self._phrase_trie:
+            self._phrase_trie = ReplacementUtils.build_trie_from_dict(phrase_dict)
 
-        return new_sentence, indexes_to_protect
+        # Get all matches
+        matches = sorted(self._phrase_trie.find_all_matches(self.sentence), reverse=True)
+
+        # Apply replacements from end to start
+        result = list(self.sentence)
+        new_indexes = set(self.indexes_to_protect)
+
+        for start, end, replacement in matches:
+            # Check if this range overlaps with protected indexes
+            if not any(
+                p_start <= start < p_end or p_start < end <= p_end for p_start, p_end in self.indexes_to_protect
+            ):
+                result[start:end] = replacement
+                new_indexes.add((start, start + len(replacement)))
+
+        return "".join(result), sorted(new_indexes)
 
     def apply_one_to_many_conversion(
         self,
