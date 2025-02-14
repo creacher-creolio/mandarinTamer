@@ -57,7 +57,7 @@ CONVERSION_CONFIGS = {
 
 # Script-specific conversion sequences
 SCRIPT_CONVERSION_SEQUENCES = {
-    "tw_traditional": [
+    "zh_tw": [
         ("modernize", ["modernize_simp"]),
         ("normalize", ["normalize_simp"]),
         (True, ["simp_to_trad"]),
@@ -65,7 +65,7 @@ SCRIPT_CONVERSION_SEQUENCES = {
         ("normalize", ["normalize_trad"]),
         ("taiwanize", ["taiwanize"]),
     ],
-    "simplified": [
+    "zh_cn": [
         ("modernize", ["modernize_trad"]),
         ("normalize", ["normalize_trad"]),
         (True, ["detaiwanize"]),

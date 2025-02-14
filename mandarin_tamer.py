@@ -34,7 +34,7 @@ class ScriptConverter:
         self.improved_one_to_many = improved_one_to_many
 
         # Get the appropriate sequence configuration
-        sequence_config = SCRIPT_CONVERSION_SEQUENCES.get(target_script, SCRIPT_CONVERSION_SEQUENCES["simplified"])
+        sequence_config = SCRIPT_CONVERSION_SEQUENCES.get(target_script, SCRIPT_CONVERSION_SEQUENCES["zh_cn"])
 
         # Build the conversion sequence based on flags
         self.conversion_sequence = [
@@ -101,11 +101,12 @@ class ScriptConverter:
 
 def convert_mandarin_script(
     sentence: str,
-    target_script: str = "",
+    target_script: str = "zh_cn",
     modernize: bool = True,
     normalize: bool = True,
     taiwanize: bool = True,
     improved_one_to_many: bool = False,
+    ner_list: list | None = None,
 ) -> str:
     """Convert text between different Chinese scripts."""
     converter = ScriptConverter(
