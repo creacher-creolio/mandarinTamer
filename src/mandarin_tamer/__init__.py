@@ -1,6 +1,6 @@
 """src/mandarin_tamer/__init__.py - Package initialization"""
 
-__version__ = "0.0.8"
+__version__ = "0.0.9"
 
 from . import conversion_dictionaries
 from . import helpers
