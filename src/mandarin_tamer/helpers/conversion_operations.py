@@ -29,10 +29,9 @@ class ConversionOperation:
             return self.sentence, self.indexes_to_protect or []
 
         # Build trie once
-        if self._phrase_trie is None:
-            self._phrase_trie = ReplacementUtils.build_trie_from_dict(phrase_dict)
+        self._phrase_trie = self._phrase_trie or ReplacementUtils.build_trie_from_dict(phrase_dict)
         # Get all matches
-        matches: list[tuple[int, int, str]] = sorted(self._phrase_trie.find_all_matches(self.sentence), reverse=True)
+        matches = sorted(self._phrase_trie.find_all_matches(self.sentence), reverse=True)
 
         # Apply replacements from end to start
         result = list(self.sentence)

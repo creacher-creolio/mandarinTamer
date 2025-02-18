@@ -1,4 +1,4 @@
-"""src/mandarinTamer/mandarin_tamer.py - Core script conversion functionality"""
+"""src/mandarin_tamer/mandarin_tamer.py - Core script conversion functionality"""
 
 from .helpers.conversion_config import (
     CONVERSION_CONFIGS,
@@ -79,7 +79,7 @@ class ScriptConverter:
             sentence, current_indexes = self.apply_conversion(
                 sentence,
                 CONVERSION_CONFIGS[config_name],
-                current_indexes or [],  # Ensure current_indexes is not None
+                current_indexes,  # current_indexes is already a list from __init__
             )
         return sentence
 
