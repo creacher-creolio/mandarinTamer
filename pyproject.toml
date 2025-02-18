@@ -1,6 +1,6 @@
 [project]
 name = "mandarin-tamer"
-version = "0.0.3"
+version = "0.0.4"
 authors = [{ name = "Jon Knebel", email = "jonknebel@gmail.com" }]
 description = "MandarinTamer is a Python library for converting Mandarin text between Simplified Chinese and Traditional Chinese, with a focus on the Taiwanese variant. It's designed to be accurate, flexible, and easy to use."
 readme = "README.md"
@@ -20,7 +20,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["mandarinTamer"]
+packages = ["mandarin_tamer"]
 package-dir = { "" = "src" }
 
 # MYPY
