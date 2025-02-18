@@ -53,7 +53,7 @@ text = convert_mandarin_script(
 )
 ```
 
-For more examples and detailed documentation, visit our [GitHub repository](https://github.com/jonkn/mandarin-tamer) or [PyPi page](https://pypi.org/project/mandarin-tamer/).
+For more examples and detailed documentation, visit our [GitHub repository](https://github.com/jonkn/mandarinTamer) or [PyPi page](https://pypi.org/project/mandarin-tamer/).
 
 ### Original Developers
 
