@@ -79,7 +79,7 @@ class ScriptConverter:
             sentence, current_indexes = self.apply_conversion(
                 sentence,
                 CONVERSION_CONFIGS[config_name],
-                current_indexes,  # current_indexes is already initialized as list
+                current_indexes or [],  # Ensure current_indexes is not None
             )
         return sentence
 

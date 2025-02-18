@@ -1,6 +1,6 @@
 # MandarinTamer
 
-MandarinTamer is a Python library for converting Mandarin text between Simplified Chinese and Traditional Chinese, with a focus on the Taiwanese variant. It’s designed to be accurate, flexible, and easy to use.
+MandarinTamer is a Python library for converting Mandarin text between Simplified Chinese and Traditional Chinese, with a focus on the Taiwanese variant. It's designed to be accurate, flexible, and easy to use.
 
 ## What Makes MandarinTamer Unique?
 
@@ -20,21 +20,40 @@ Traditional conversion tools often fail to capture the nuances of regional varia
 
 ## Get Started
 
-To get started with MandarinTamer, simply install the package via pip:
+Install MandarinTamer from PyPI:
 
 ```bash
-pip install mandarinTamer
+pip install mandarin-tamer
 ```
 
-Once installed, you can use it to convert text to Simplified or Taiwanese Traditional Mandarin with a few lines of code. Here’s a quick example:
+Basic usage:
 
 ```python
-from mandarinTamer import convert
+from mandarin_tamer import convert_mandarin_script
 
-mandarin_text = "简体字"
-traditional_text = convert(mandarin_text, target_script="zh_tw")
-print(traditional_text)
+# Convert to Traditional (Taiwan)
+trad = convert_mandarin_script("简体字", target_script="zh_tw")
+print(trad)  # 簡體字
+
+# Convert to Simplified
+simp = convert_mandarin_script("繁體字", target_script="zh_cn")
+print(simp)  # 繁体字
+
+# Advanced options
+text = convert_mandarin_script(
+    "现代化的字",
+    target_script="zh_tw",
+    modernize=True,     # Replace archaic terms with modern ones
+    normalize=True,     # Normalize character variants
+    taiwanize=True,    # Use Taiwan-specific variants
+    improved_one_to_many=True, # Use improved one-to-many mapping
+    ner_list=["人名"], # List of NERs to include
+    include_dicts={"name": ["name_dict.json"]}, # Include specific dictionaries
+    exclude_lists={"name": ["name_exclude.json"]}, # Exclude specific dictionaries
+)
 ```
+
+For more examples and detailed documentation, visit our [GitHub repository](https://github.com/jonkn/mandarin-tamer) or [PyPi page](https://pypi.org/project/mandarin-tamer/).
 
 ### Original Developers
 
@@ -58,7 +77,7 @@ Mainland China:
 
 Hong Kong:
 
-- **Julia Yuen Ka Suen (袁嘉旋)**
+- **Julia Yuen Ka Suen (袁嘉旋)**
 - **Lok Yee Chan**
 
 Their dedication and expertise have been crucial in ensuring the accuracy and reliability of MandarinTamer.
