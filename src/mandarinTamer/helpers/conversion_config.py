@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from utils.open_ai_prompts import (
+from .open_ai_prompts import (
     openai_detaiwanize_one2many_mappings,
     openai_modernize_simp_one2many_mappings,
     openai_modernize_trad_one2many_mappings,

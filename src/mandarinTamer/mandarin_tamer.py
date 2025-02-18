@@ -1,14 +1,39 @@
-import sys
+"""src/mandarinTamer/mandarin_tamer.py - Core script conversion functionality"""
 
-sys.path.append("..")
-from utils.conversion_config import (
+from .helpers.conversion_config import (
     CONVERSION_CONFIGS,
     SCRIPT_RESET_STEPS,
     ConversionConfig,
     get_conversion_steps,
 )
-from utils.conversion_operations import ConversionOperation, DictionaryLoader
-from utils.replacement_by_dictionary import ReplacementUtils
+from .helpers.conversion_operations import ConversionOperation, DictionaryLoader
+from .helpers.replacement_by_dictionary import ReplacementUtils
+
+
+def convert_mandarin_script(
+    sentence: str,
+    target_script: str = "zh_cn",
+    modernize: bool = True,
+    normalize: bool = True,
+    taiwanize: bool = True,
+    improved_one_to_many: bool = False,
+    ner_list: list | None = None,
+    include_dicts: dict | None = None,
+    exclude_lists: dict | None = None,
+) -> str:
+    """Convert text between different Chinese scripts."""
+    converter = ScriptConverter(
+        sentence=sentence,
+        target_script=target_script,
+        modernize=modernize,
+        normalize=normalize,
+        taiwanize=taiwanize,
+        improved_one_to_many=improved_one_to_many,
+        ner_list=ner_list,
+        include_dicts=include_dicts,
+        exclude_lists=exclude_lists,
+    )
+    return converter.convert()
 
 
 class ScriptConverter:
@@ -46,13 +71,17 @@ class ScriptConverter:
             },
         )
 
-    def load_config(self, config: ConversionConfig) -> None:
-        """Load dictionaries for a conversion configuration."""
-        self.dicts[config.name] = self.loader.load_conversion_config(
-            config,
-            self.include_dicts,
-            self.exclude_lists,
-        )
+    def convert(self) -> str:
+        """Convert text between different Chinese scripts."""
+        current_indexes = self.ner_indexes
+        sentence = self.sentence
+        for config_name in self.conversion_sequence:
+            sentence, current_indexes = self.apply_conversion(
+                sentence,
+                CONVERSION_CONFIGS[config_name],
+                current_indexes,
+            )
+        return sentence
 
     def apply_conversion(
         self,
@@ -93,40 +122,10 @@ class ScriptConverter:
         operation = ConversionOperation(new_sentence, phrase_indexes)
         return operation.apply_char_conversion(dicts["char"])
 
-    def convert(self) -> str:
-        """Convert text between different Chinese scripts."""
-        current_indexes = self.ner_indexes
-        sentence = self.sentence
-        for config_name in self.conversion_sequence:
-            sentence, current_indexes = self.apply_conversion(
-                sentence,
-                CONVERSION_CONFIGS[config_name],
-                current_indexes,
-            )
-        return sentence
-
-
-def convert_mandarin_script(
-    sentence: str,
-    target_script: str = "zh_cn",
-    modernize: bool = True,
-    normalize: bool = True,
-    taiwanize: bool = True,
-    improved_one_to_many: bool = False,
-    ner_list: list | None = None,
-    include_dicts: dict | None = None,
-    exclude_lists: dict | None = None,
-) -> str:
-    """Convert text between different Chinese scripts."""
-    converter = ScriptConverter(
-        sentence=sentence,
-        target_script=target_script,
-        modernize=modernize,
-        normalize=normalize,
-        taiwanize=taiwanize,
-        improved_one_to_many=improved_one_to_many,
-        ner_list=ner_list,
-        include_dicts=include_dicts,
-        exclude_lists=exclude_lists,
-    )
-    return converter.convert()
+    def load_config(self, config: ConversionConfig) -> None:
+        """Load dictionaries for a conversion configuration."""
+        self.dicts[config.name] = self.loader.load_conversion_config(
+            config,
+            self.include_dicts,
+            self.exclude_lists,
+        )

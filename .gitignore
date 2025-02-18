@@ -14,6 +14,10 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
+# Distribution and build
+dist/
+build/
+
 # Coverage reports
 htmlcov/
 .coverage
@@ -24,6 +28,9 @@ coverage/
 .idea/
 # .cursor/
 
+# Common to our projects
+.top_level/
+
 # Unnecessary Docs
 docs/ai_tips/
 docs/useful/
@@ -31,3 +38,4 @@ docs/useful/
 # Project specific
 useful_functions/
 data_sources/
+mandarin_tamer.egg-info/

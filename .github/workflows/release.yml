@@ -1,0 +1,54 @@
+name: release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  pypi-publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/mandarin_tamer
+      # This links the workflow to your PyPI project page
+      # Helps with tracking deployments and provides a direct link
+    permissions:
+      id-token: write
+      # This is crucial for trusted publishing
+      # Allows GitHub to generate a secure token for PyPI authentication
+    steps:
+      - uses: actions/checkout@v4
+        # This step checks out your repository code into the GitHub Actions runner.
+        # Without this, the runner wouldn't have access to your project files.
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          # This step installs Python 3.11 on the runner.
+          # We need Python to build and publish your package.
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+        # This step:
+        # 1. Upgrades pip to latest version to avoid any compatibility issues
+        # 2. Installs 'build' (creates wheel and sdist packages)
+        # 3. Installs 'twine' (tool for interacting with PyPI)
+
+      - name: Build package
+        run: python -m build
+        # This creates two distribution formats:
+        # 1. A wheel file (.whl) - A built package format
+        # 2. A source distribution (.tar.gz) - Raw source code package
+        # Both are needed for maximum compatibility with different systems
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # This step publishes your built packages to PyPI
+        # It uses GitHub's OIDC token for trusted publishing
+        # No API token needed because you've set up trusted publishing

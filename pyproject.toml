@@ -1,11 +1,27 @@
 [project]
-name = "mandarin-tamer"
-version = "1.0.0"
+name = "mandarin_tamer"
+version = "0.0.1"
+authors = [{ name = "Jon Knebel", email = "jonknebel@gmail.com" }]
+description = "MandarinTamer is a Python library for converting Mandarin text between Simplified Chinese and Traditional Chinese, with a focus on the Taiwanese variant. It's designed to be accurate, flexible, and easy to use."
+readme = "README.md"
 requires-python = ">= 3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = { text = "MIT" }
+
+[project.urls]
+Homepage = "https://github.com/creolio/mandarinTamer"
+Issues = "https://github.com/creolio/mandarinTamer/issues"
 
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["mandarinTamer"]
+package-dir = { "" = "src" }
 
 # MYPY
 [tool.mypy]
@@ -20,6 +36,7 @@ exclude = ["**/venv/**", "**/env/**", "**/.top_level/**"]
 
 # RUFF
 [tool.ruff]
+cache-dir = "./.top_level/.ruff_cache"
 exclude = [
     "__init__.py",
     "__pycache__",

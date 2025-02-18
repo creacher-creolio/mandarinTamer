@@ -1,9 +1,7 @@
 import re
-import sys
 
-sys.path.append("..")
-from utils.punctuation_utils import punctuation_pattern
-from utils.trie import Trie
+from .punctuation_utils import punctuation_pattern
+from .trie import Trie
 
 
 class ReplacementUtils:
@@ -23,13 +21,6 @@ class ReplacementUtils:
         )
 
     @staticmethod
-    def build_trie_from_dict(dictionary: dict) -> Trie:
-        trie = Trie()
-        for key, value in dictionary.items():
-            trie.insert(key, value)
-        return trie
-
-    @staticmethod
     def get_phrases_to_skip(sentence: str, dictionary: dict) -> list[str]:
         # Build trie once and cache it
         trie = ReplacementUtils.build_trie_from_dict(dictionary)
@@ -40,7 +31,8 @@ class ReplacementUtils:
     def get_indexes_to_protect_from_list(
         sentence: str, dictionary: dict, indexes_to_protect: list[tuple[int, int]] | None = None
     ) -> list[tuple[int, int]]:
-        indexes_to_protect = set(indexes_to_protect or [])
+        # Convert None to empty list and keep as list
+        indexes_to_protect = list(indexes_to_protect or [])
 
         # Build tries for both forward and reverse lookups
         forward_trie = ReplacementUtils.build_trie_from_dict(dictionary)
@@ -52,10 +44,13 @@ class ReplacementUtils:
         reverse_matches = reverse_trie.find_all_matches(sentence)
 
         # Add all matches to protected indexes
-        for start, end, _ in forward_matches + reverse_matches:
-            indexes_to_protect.add((start, end))
+        # Convert matches to set of tuples for unique values
+        new_indexes = {(start, end) for start, end, _ in forward_matches + reverse_matches}
 
-        return sorted(indexes_to_protect)
+        # Update indexes_to_protect with new indexes
+        indexes_to_protect.extend(new_indexes)
+
+        return sorted(set(indexes_to_protect))
 
     @staticmethod
     def get_ner_indexes(sentence: str, ner_list: list) -> list[tuple[int, int]]:
@@ -124,3 +119,10 @@ class ReplacementUtils:
         for start, end in indexes_to_protect:
             new_sentence = new_sentence[:start] + sentence[start:end] + new_sentence[end:]
         return new_sentence
+
+    @staticmethod
+    def build_trie_from_dict(dictionary: dict) -> Trie:
+        trie = Trie()
+        for key, value in dictionary.items():
+            trie.insert(key, value)
+        return trie

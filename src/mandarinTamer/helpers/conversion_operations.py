@@ -3,9 +3,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from opencc import OpenCC
-from utils.conversion_config import ConversionConfig
-from utils.file_conversion import FileConversion
-from utils.replacement_by_dictionary import ReplacementUtils
+
+from .conversion_config import ConversionConfig
+from .file_conversion import FileConversion
+from .replacement_by_dictionary import ReplacementUtils
 
 
 @dataclass
@@ -25,23 +26,22 @@ class ConversionOperation:
     def apply_phrase_conversion(self, phrase_dict: dict) -> tuple[str, list[tuple[int, int]]]:
         """Apply phrase-level conversion."""
         if not phrase_dict or not any(phrase_dict.values()):
-            return self.sentence, self.indexes_to_protect
+            return self.sentence, self.indexes_to_protect or []
 
         # Build trie once
-        if not self._phrase_trie:
+        if self._phrase_trie is None:
             self._phrase_trie = ReplacementUtils.build_trie_from_dict(phrase_dict)
-
         # Get all matches
-        matches = sorted(self._phrase_trie.find_all_matches(self.sentence), reverse=True)
+        matches: list[tuple[int, int, str]] = sorted(self._phrase_trie.find_all_matches(self.sentence), reverse=True)
 
         # Apply replacements from end to start
         result = list(self.sentence)
-        new_indexes = set(self.indexes_to_protect)
+        new_indexes = set(self.indexes_to_protect or [])
 
         for start, end, replacement in matches:
             # Check if this range overlaps with protected indexes
             if not any(
-                p_start <= start < p_end or p_start < end <= p_end for p_start, p_end in self.indexes_to_protect
+                p_start <= start < p_end or p_start < end <= p_end for p_start, p_end in (self.indexes_to_protect or [])
             ):
                 result[start:end] = replacement
                 new_indexes.add((start, start + len(replacement)))
@@ -92,28 +92,11 @@ class ConversionOperation:
 class DictionaryLoader:
     """Handles loading and merging of conversion dictionaries."""
 
-    def __init__(self, base_path: Path = Path("../conversion_dictionaries")):
+    def __init__(self, base_path: Path | None = None):
+        if base_path is None:
+            # Use the package's conversion_dictionaries directory
+            base_path = Path(__file__).parent.parent / "conversion_dictionaries"
         self.base_path = base_path
-
-    def load_dict(self, sub_dir: str, filename: str) -> dict:
-        """Load a dictionary from file."""
-        path = self.base_path / sub_dir / filename if sub_dir else self.base_path / filename
-        return FileConversion.json_to_dict(path)
-
-    def merge_dicts(
-        self,
-        base_dict: dict,
-        include_dict: dict | None = None,
-        exclude_list: list | None = None,
-    ) -> dict:
-        """Merge dictionaries with include/exclude options."""
-        merged_dict = base_dict.copy()
-        if include_dict:
-            merged_dict.update(include_dict)
-        if exclude_list:
-            for item in exclude_list:
-                merged_dict.pop(item, None)
-        return merged_dict
 
     def load_conversion_config(
         self,
@@ -144,3 +127,23 @@ class DictionaryLoader:
             if config.openai_func or config.opencc_config
             else None,
         }
+
+    def merge_dicts(
+        self,
+        base_dict: dict,
+        include_dict: dict | None = None,
+        exclude_list: list | None = None,
+    ) -> dict:
+        """Merge dictionaries with include/exclude options."""
+        merged_dict = base_dict.copy()
+        if include_dict:
+            merged_dict.update(include_dict)
+        if exclude_list:
+            for item in exclude_list:
+                merged_dict.pop(item, None)
+        return merged_dict
+
+    def load_dict(self, sub_dir: str, filename: str) -> dict:
+        """Load a dictionary from file."""
+        path = self.base_path / sub_dir / filename if sub_dir else self.base_path / filename
+        return FileConversion.json_to_dict(path)
