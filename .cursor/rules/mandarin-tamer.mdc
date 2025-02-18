@@ -1,5 +1,5 @@
 ---
-description: 
+description: mandarin tamer project overview
 globs: 
 ---
 # PROJECT OVERVIEW
@@ -7,6 +7,8 @@ globs:
 MandarinTamer is a Python library for converting Mandarin text between Simplified Chinese and Traditional Chinese, with a focus on the Taiwanese variant.
 
 This tool provides precise Simplified ↔ Taiwanese Traditional text conversion while adhering to regional norms. It leverages AI-powered context awareness to intelligently resolve one-to-many mappings. Additionally, it offers modernization and normalization by replacing rare or archaic words with common equivalents.
+
+# ROADMAP
 
 # SPECIAL CONSIDERATIONS
 - currently, the one2many and phrase conversion steps are slow, and we'd like to speed these up. Some ideas might be to ensure that they only run when there is a key match in the sentence and, if opencc or an AI is run on the sentence once, to only run it once and then to reuse it in future steps as needed.
