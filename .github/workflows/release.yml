@@ -51,3 +51,12 @@ jobs:
         # This step publishes your built packages to PyPI
         # Uses GitHub's OIDC token for trusted publishing
         # No credentials needed - uses trusted publishing
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+          generate_release_notes: true
