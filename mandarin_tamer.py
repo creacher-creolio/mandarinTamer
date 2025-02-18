@@ -76,12 +76,12 @@ class ScriptConverter:
 
         # Apply phrase conversion if dictionary is not empty
         if dicts["phrase"] and any(dicts["phrase"].values()):
-            operation = ConversionOperation(new_sentence, phrase_indexes, config.name)
+            operation = ConversionOperation(new_sentence, phrase_indexes)
             new_sentence, phrase_indexes = operation.apply_phrase_conversion(dicts["phrase"])
 
         # Apply one-to-many conversion if available
         if dicts["one2many"] and (config.openai_func or config.opencc_config):
-            operation = ConversionOperation(new_sentence, phrase_indexes, config.name)
+            operation = ConversionOperation(new_sentence, phrase_indexes)
             new_sentence = operation.apply_one_to_many_conversion(
                 dicts["one2many"],
                 self.improved_one_to_many,
@@ -90,7 +90,7 @@ class ScriptConverter:
             )
 
         # Apply character conversion
-        operation = ConversionOperation(new_sentence, phrase_indexes, config.name)
+        operation = ConversionOperation(new_sentence, phrase_indexes)
         return operation.apply_char_conversion(dicts["char"])
 
     def convert(self) -> str:

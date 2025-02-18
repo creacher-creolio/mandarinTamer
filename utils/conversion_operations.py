@@ -1,4 +1,3 @@
-import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,16 +14,12 @@ class ConversionOperation:
 
     sentence: str
     indexes_to_protect: list[tuple[int, int]] | None = None
-    config_name: str | None = None
     include_dict: dict | None = None
     exclude_list: list | None = None
 
-    def __init__(
-        self, sentence: str, indexes_to_protect: list[tuple[int, int]] | None = None, config_name: str | None = None
-    ):
+    def __init__(self, sentence: str, indexes_to_protect: list[tuple[int, int]] | None = None):
         self.sentence = sentence
         self.indexes_to_protect = indexes_to_protect or []
-        self.config_name = config_name
         self._phrase_trie = None
 
     def apply_phrase_conversion(self, phrase_dict: dict) -> tuple[str, list[tuple[int, int]]]:
@@ -32,23 +27,14 @@ class ConversionOperation:
         if not phrase_dict or not any(phrase_dict.values()):
             return self.sentence, self.indexes_to_protect
 
-        print(f"\nPhrase conversion timing breakdown [{self.config_name}]:")
-        total_start = time.time()
-
         # Build trie once
-        trie_start = time.time()
         if not self._phrase_trie:
             self._phrase_trie = ReplacementUtils.build_trie_from_dict(phrase_dict)
-        print(f"  - [{self.config_name}] Trie building took: {time.time() - trie_start:.3f}s")
 
         # Get all matches
-        match_start = time.time()
         matches = sorted(self._phrase_trie.find_all_matches(self.sentence), reverse=True)
-        print(f"  - [{self.config_name}] Finding matches took: {time.time() - match_start:.3f}s")
-        print(f"  - [{self.config_name}] Number of matches found: {len(matches)}")
 
         # Apply replacements from end to start
-        replace_start = time.time()
         result = list(self.sentence)
         new_indexes = set(self.indexes_to_protect)
 
@@ -59,8 +45,6 @@ class ConversionOperation:
             ):
                 result[start:end] = replacement
                 new_indexes.add((start, start + len(replacement)))
-        print(f"  - [{self.config_name}] Applying replacements took: {time.time() - replace_start:.3f}s")
-        print(f"Total [{self.config_name}] phrase conversion took: {time.time() - total_start:.3f}s")
 
         return "".join(result), sorted(new_indexes)
 
@@ -76,44 +60,21 @@ class ConversionOperation:
             msg = "Either improved mode or opencc_config must be specified"
             raise ValueError(msg)
 
-        print(f"\nOne-to-many conversion timing breakdown [{self.config_name}]:")
-        total_start = time.time()
-
         new_sentence = self.sentence
         indexes_to_protect = self.indexes_to_protect or []
 
         if use_improved_mode and openai_func:
-            print(f"[{self.config_name}] Using improved mode with OpenAI:")
-            chars_to_convert = [char for char in mapping_dict if char in new_sentence]
-            print(f"  - [{self.config_name}] Found {len(chars_to_convert)} characters to convert")
-
-            for i, char in enumerate(chars_to_convert, 1):
-                char_start = time.time()
-                replacement = openai_func(new_sentence, char, mapping_dict)
-                new_sentence = new_sentence.replace(char, replacement)
-                print(
-                    f"  - [{self.config_name}] Character {i}/{len(chars_to_convert)} conversion took: {time.time() - char_start:.3f}s"
-                )
+            for char in mapping_dict:
+                if char in new_sentence:
+                    new_sentence = new_sentence.replace(char, openai_func(new_sentence, char, mapping_dict))
         else:
-            print(f"[{self.config_name}] Using OpenCC mode:")
-            opencc_start = time.time()
             cc = OpenCC(opencc_config)
             cc_converted = cc.convert(new_sentence)
-            print(f"  - [{self.config_name}] OpenCC conversion took: {time.time() - opencc_start:.3f}s")
+            for char in mapping_dict:
+                if char in new_sentence:
+                    new_sentence = new_sentence.replace(char, cc_converted[new_sentence.index(char)])
 
-            replace_start = time.time()
-            chars_to_convert = [char for char in mapping_dict if char in new_sentence]
-            print(f"  - [{self.config_name}] Found {len(chars_to_convert)} characters to convert")
-            for char in chars_to_convert:
-                new_sentence = new_sentence.replace(char, cc_converted[new_sentence.index(char)])
-            print(f"  - [{self.config_name}] Character replacement took: {time.time() - replace_start:.3f}s")
-
-        protect_start = time.time()
-        final_sentence = ReplacementUtils.revert_protected_indexes(self.sentence, new_sentence, indexes_to_protect)
-        print(f"  - [{self.config_name}] Protecting indexes took: {time.time() - protect_start:.3f}s")
-        print(f"Total [{self.config_name}] one-to-many conversion took: {time.time() - total_start:.3f}s")
-
-        return final_sentence
+        return ReplacementUtils.revert_protected_indexes(self.sentence, new_sentence, indexes_to_protect)
 
     def apply_char_conversion(self, char_dict: dict) -> tuple[str, list[tuple[int, int]] | None]:
         """Apply character-level conversion."""
