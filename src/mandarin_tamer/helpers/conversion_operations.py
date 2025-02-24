@@ -34,45 +34,111 @@ class ConversionOperation:
 
     def apply_phrase_conversion(self, phrase_dict: dict) -> tuple[str, list[tuple[int, int]]]:
         """Apply phrase-level conversion with optimized performance."""
-        if not phrase_dict or not any(phrase_dict.values()):
+        if not phrase_dict:
             return self.sentence, self.indexes_to_protect
 
         print(f"\nPhrase conversion timing breakdown [{self.config_name}]:")
         total_start = time.time()
 
+        # Build trie if needed (assumed to be already optimized)
         trie_start = time.time()
         if not self._phrase_trie:
             self._phrase_trie = ReplacementUtils.build_trie_from_dict(phrase_dict)
         print(f"  - [{self.config_name}] Trie building took: {time.time() - trie_start:.3f}s")
 
         match_start = time.time()
-        matches = []
-        protected_ranges = sorted(self.indexes_to_protect) if self.indexes_to_protect else []
 
-        for start, end, replacement in self._phrase_trie.find_all_matches(self.sentence):
-            if not any(r[0] <= start < r[1] or r[0] < end <= r[1] for r in protected_ranges):
-                matches.append((start, end, replacement))
+        # Create a list of characters for efficient random access
+        chars = list(self.sentence)
+        length = len(chars)
 
-        matches.sort(reverse=True)
+        # Create a fast lookup array for tracking positions to modify
+        # -1 means unmodified, other values indicate which match will modify this position
+        modifications = [-1] * length
+
+        # Protected ranges into O(1) lookup array
+        protected = [False] * length
+        if self.indexes_to_protect:
+            for start, end in self.indexes_to_protect:
+                for i in range(start, end):
+                    protected[i] = True
+
+        # Find all matches in a single forward pass
+        matches = []  # (start_idx, end_idx, replacement, match_id)
+        match_id = 0
+        pos = 0
+
+        while pos < length:
+            if protected[pos]:
+                pos += 1
+                continue
+
+            # Try to find longest match at current position
+            node = self._phrase_trie.root
+            current_pos = pos
+            longest_match = None
+
+            while current_pos < length:
+                char = chars[current_pos]
+                if char not in node.children:
+                    break
+
+                node = node.children[char]
+                if node.is_end:
+                    # Verify no protected characters in match
+                    if not any(protected[i] for i in range(pos, current_pos + 1)):
+                        longest_match = (pos, current_pos + 1, node.value)
+                current_pos += 1
+
+            if longest_match:
+                start, end, repl = longest_match
+                # Only add match if no overlap with previous matches
+                if all(modifications[i] == -1 for i in range(start, end)):
+                    matches.append((start, end, repl, match_id))
+                    # Mark all positions this match will modify
+                    for i in range(start, end):
+                        modifications[i] = match_id
+                    match_id += 1
+                    pos = end
+                else:
+                    pos += 1
+            else:
+                pos += 1
+
         print(f"  - [{self.config_name}] Finding matches took: {time.time() - match_start:.3f}s")
         print(f"  - [{self.config_name}] Number of matches found: {len(matches)}")
 
+        # If no matches found, return original
+        if not matches:
+            print(f"Total [{self.config_name}] phrase conversion took: {time.time() - total_start:.3f}s")
+            return self.sentence, self.indexes_to_protect
+
         replace_start = time.time()
-        result = bytearray(self.sentence.encode("utf-8"))
-        new_indexes = set(self.indexes_to_protect or [])
 
-        for start, end, replacement in matches:
-            byte_start = len(self.sentence[:start].encode("utf-8"))
-            byte_end = len(self.sentence[:end].encode("utf-8"))
-            replacement_bytes = replacement.encode("utf-8")
+        # Build result string and new protected ranges efficiently
+        result = []
+        new_protected = set(self.indexes_to_protect or [])
+        current_pos = 0
 
-            result[byte_start:byte_end] = replacement_bytes
-            new_indexes.add((start, start + len(replacement)))
+        for start, end, replacement, _ in matches:
+            # Add unchanged characters before match
+            if start > current_pos:
+                result.append("".join(chars[current_pos:start]))
 
+            # Add replacement
+            result.append(replacement)
+            new_protected.add((start, start + len(replacement)))
+            current_pos = end
+
+        # Add remaining unchanged characters
+        if current_pos < length:
+            result.append("".join(chars[current_pos:]))
+
+        final_result = "".join(result)
         print(f"  - [{self.config_name}] Applying replacements took: {time.time() - replace_start:.3f}s")
         print(f"Total [{self.config_name}] phrase conversion took: {time.time() - total_start:.3f}s")
 
-        return result.decode("utf-8"), list(new_indexes)
+        return final_result, sorted(new_protected)
 
     def apply_one_to_many_conversion(
         self,
