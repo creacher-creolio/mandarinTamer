@@ -110,13 +110,15 @@ class ScriptConverter:
 
         # Apply one-to-many conversion if available
         if dicts["one2many"] and (config.openai_func or config.opencc_config):
-            operation = ConversionOperation(new_sentence, phrase_indexes, config.name)
-            new_sentence = operation.apply_one_to_many_conversion(
-                dicts["one2many"],
-                self.improved_one_to_many,
-                config.openai_func if self.improved_one_to_many else None,
-                config.opencc_config if not self.improved_one_to_many else None,
-            )
+            needs_conversion = any(char in dicts["one2many"] for char in new_sentence)
+            if needs_conversion:
+                operation = ConversionOperation(new_sentence, phrase_indexes, config.name)
+                new_sentence = operation.apply_one_to_many_conversion(
+                    dicts["one2many"],
+                    self.improved_one_to_many,
+                    config.openai_func if self.improved_one_to_many else None,
+                    config.opencc_config if not self.improved_one_to_many else None,
+                )
 
         # Apply character conversion
         operation = ConversionOperation(new_sentence, phrase_indexes, config.name)
