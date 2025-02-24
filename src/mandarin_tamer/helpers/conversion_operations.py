@@ -1,6 +1,6 @@
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from opencc import OpenCC
@@ -19,6 +19,10 @@ class ConversionOperation:
     config_name: str | None = None
     include_dict: dict | None = None
     exclude_list: list | None = None
+    _phrase_trie: object = field(default=None, init=False)
+    _opencc_cache: dict[str, str] = field(default_factory=dict, init=False)
+    _current_opencc_config: str | None = field(default=None, init=False)
+    _cached_converted: str | None = field(default=None, init=False)
 
     def __init__(
         self, sentence: str, indexes_to_protect: list[tuple[int, int]] | None = None, config_name: str | None = None
@@ -98,15 +102,21 @@ class ConversionOperation:
         else:
             print(f"[{self.config_name}] Using OpenCC mode:")
             opencc_start = time.time()
-            cc = OpenCC(opencc_config)
-            cc_converted = cc.convert(new_sentence)
-            print(f"  - [{self.config_name}] OpenCC conversion took: {time.time() - opencc_start:.3f}s")
+
+            if opencc_config != self._current_opencc_config or self._cached_converted is None:
+                cc = OpenCC(opencc_config)
+                self._cached_converted = cc.convert(new_sentence)
+                self._current_opencc_config = opencc_config
+                print(f"  - [{opencc_config}] New OpenCC conversion took: {time.time() - opencc_start:.3f}s")
+            else:
+                print(f"  - [{opencc_config}] Using cached OpenCC conversion")
 
             replace_start = time.time()
             chars_to_convert = [char for char in mapping_dict if char in new_sentence]
             print(f"  - [{self.config_name}] Found {len(chars_to_convert)} characters to convert")
+
             for char in chars_to_convert:
-                new_sentence = new_sentence.replace(char, cc_converted[new_sentence.index(char)])
+                new_sentence = new_sentence.replace(char, self._cached_converted[new_sentence.index(char)])
             print(f"  - [{self.config_name}] Character replacement took: {time.time() - replace_start:.3f}s")
 
         protect_start = time.time()
