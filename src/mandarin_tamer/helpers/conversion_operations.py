@@ -33,41 +33,46 @@ class ConversionOperation:
         self._phrase_trie = None
 
     def apply_phrase_conversion(self, phrase_dict: dict) -> tuple[str, list[tuple[int, int]]]:
-        """Apply phrase-level conversion."""
+        """Apply phrase-level conversion with optimized performance."""
         if not phrase_dict or not any(phrase_dict.values()):
             return self.sentence, self.indexes_to_protect
 
         print(f"\nPhrase conversion timing breakdown [{self.config_name}]:")
         total_start = time.time()
 
-        # Build trie once
         trie_start = time.time()
         if not self._phrase_trie:
             self._phrase_trie = ReplacementUtils.build_trie_from_dict(phrase_dict)
         print(f"  - [{self.config_name}] Trie building took: {time.time() - trie_start:.3f}s")
 
-        # Get all matches
         match_start = time.time()
-        matches = sorted(self._phrase_trie.find_all_matches(self.sentence), reverse=True)
+        matches = []
+        protected_ranges = sorted(self.indexes_to_protect) if self.indexes_to_protect else []
+
+        for start, end, replacement in self._phrase_trie.find_all_matches(self.sentence):
+            if not any(r[0] <= start < r[1] or r[0] < end <= r[1] for r in protected_ranges):
+                matches.append((start, end, replacement))
+
+        matches.sort(reverse=True)
         print(f"  - [{self.config_name}] Finding matches took: {time.time() - match_start:.3f}s")
         print(f"  - [{self.config_name}] Number of matches found: {len(matches)}")
 
-        # Apply replacements from end to start
         replace_start = time.time()
-        result = list(self.sentence)
-        new_indexes = set(self.indexes_to_protect)
+        result = bytearray(self.sentence.encode("utf-8"))
+        new_indexes = set(self.indexes_to_protect or [])
 
         for start, end, replacement in matches:
-            # Check if this range overlaps with protected indexes
-            if not any(
-                p_start <= start < p_end or p_start < end <= p_end for p_start, p_end in self.indexes_to_protect
-            ):
-                result[start:end] = replacement
-                new_indexes.add((start, start + len(replacement)))
+            byte_start = len(self.sentence[:start].encode("utf-8"))
+            byte_end = len(self.sentence[:end].encode("utf-8"))
+            replacement_bytes = replacement.encode("utf-8")
+
+            result[byte_start:byte_end] = replacement_bytes
+            new_indexes.add((start, start + len(replacement)))
+
         print(f"  - [{self.config_name}] Applying replacements took: {time.time() - replace_start:.3f}s")
         print(f"Total [{self.config_name}] phrase conversion took: {time.time() - total_start:.3f}s")
 
-        return "".join(result), sorted(new_indexes)
+        return result.decode("utf-8"), list(new_indexes)
 
     def apply_one_to_many_conversion(
         self,
