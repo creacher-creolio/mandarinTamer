@@ -2,90 +2,105 @@ import json
 
 from openai import OpenAI
 
-client = OpenAI()
+
+def initialize_openai_client(openai_key: str | None, improved_one_to_many: bool):
+    """Initialize OpenAI client based on the presence of openai_key and improved_one_to_many flag."""
+    if openai_key:
+        return OpenAI(api_key=openai_key)
+    if improved_one_to_many:
+        return OpenAI()
+    return None
 
 
-def openai_s2t_one2many_mappings(sentence, token, mapping_dict):
+def openai_s2t_one2many_mappings(sentence, token, mapping_dict, client):
     return _one2many_mapping(
         "replacing Simplified Mandarin with Traditional Taiwanese Mandarin",
         "sentence",
         sentence,
         token,
         mapping_dict,
+        client,
     )
 
 
-def openai_t2s_one2many_mappings(tokenized_sentence, token, mapping_dict):
+def openai_t2s_one2many_mappings(tokenized_sentence, token, mapping_dict, client):
     return _one2many_mapping(
         "replacing Traditional Mandarin with Simplified Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
         token,
         mapping_dict,
+        client,
     )
 
 
-def openai_modernize_simp_one2many_mappings(tokenized_sentence, token, mapping_dict):
+def openai_modernize_simp_one2many_mappings(tokenized_sentence, token, mapping_dict, client):
     return _one2many_mapping(
         "replacing outdated/archaic Simplified Mandarin with Modern Simplified Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
         token,
         mapping_dict,
+        client,
     )
 
 
-def openai_normalize_simp_one2many_mappings(tokenized_sentence, token, mapping_dict):
+def openai_normalize_simp_one2many_mappings(tokenized_sentence, token, mapping_dict, client):
     return _one2many_mapping(
         "replacing uncommon words with more common equivalents in Simplified Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
         token,
         mapping_dict,
+        client,
     )
 
 
-def openai_modernize_trad_one2many_mappings(tokenized_sentence, token, mapping_dict):
+def openai_modernize_trad_one2many_mappings(tokenized_sentence, token, mapping_dict, client):
     return _one2many_mapping(
         "replacing outdated/archaic Traditional Mandarin with Modern Traditional Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
         token,
         mapping_dict,
+        client,
     )
 
 
-def openai_normalize_trad_one2many_mappings(tokenized_sentence, token, mapping_dict):
+def openai_normalize_trad_one2many_mappings(tokenized_sentence, token, mapping_dict, client):
     return _one2many_mapping(
         "replacing uncommon words with more common equivalents in Traditional Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
         token,
         mapping_dict,
+        client,
     )
 
 
-def openai_taiwanize_one2many_mappings(tokenized_sentence, token, mapping_dict):
+def openai_taiwanize_one2many_mappings(tokenized_sentence, token, mapping_dict, client):
     return _one2many_mapping(
         "replacing Traditional Mandarin with Traditional Taiwanese Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
         token,
         mapping_dict,
+        client,
     )
 
 
-def openai_detaiwanize_one2many_mappings(tokenized_sentence, token, mapping_dict):
+def openai_detaiwanize_one2many_mappings(tokenized_sentence, token, mapping_dict, client):
     return _one2many_mapping(
         "replacing Traditional Taiwanese Mandarin with Traditional Hong Kong Mandarin",
         "tokenized_sentence",
         tokenized_sentence,
         token,
         mapping_dict,
+        client,
     )
 
 
-def _one2many_mapping(prompt_intent, sentence_label, sentence, token, mapping_dict):
+def _one2many_mapping(prompt_intent, sentence_label, sentence, token, mapping_dict, client):
     system_context = f"""
     Return as json the best_replacement_token for the token in the sentence based on the options in the mapping_dictionary for {prompt_intent}.
     """
@@ -95,6 +110,7 @@ def _one2many_mapping(prompt_intent, sentence_label, sentence, token, mapping_di
             system_content=system_context,
             user_content=user_context,
             json_mode=True,
+            client=client,
         )
         or '{"best_replacement_token": ""}'
     )
@@ -109,6 +125,7 @@ def get_openai_response(
     json_mode=False,
     max_tokens=3500,
     temperature=0,
+    client=None,
 ):
     messages = []
     if system_content:
@@ -124,8 +141,5 @@ def get_openai_response(
         messages=messages,
         max_tokens=max_tokens,
         temperature=temperature,
-        # top_p=1,
-        # frequency_penalty=0,
-        # presence_penalty=0,
     )
     return completion.choices[0].message.content

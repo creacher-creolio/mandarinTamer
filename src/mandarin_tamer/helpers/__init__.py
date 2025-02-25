@@ -19,6 +19,7 @@ __all__ = [
     "ConversionConfig",
     "get_conversion_steps",
     "ConversionOperation",
+    "initialize_openai_client",
     "DictionaryLoader",
     "ReplacementUtils",
     "Trie",

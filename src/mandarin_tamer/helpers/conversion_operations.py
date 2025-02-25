@@ -53,6 +53,7 @@ class ConversionOperation:
         use_improved_mode: bool = False,
         openai_func: Callable | None = None,
         opencc_config: str | None = None,
+        openai_client: Callable | None = None,
     ) -> str:
         """Apply one-to-many character conversion."""
         if not use_improved_mode and not opencc_config:
@@ -65,7 +66,9 @@ class ConversionOperation:
         if use_improved_mode and openai_func:
             for char in mapping_dict:
                 if char in new_sentence:
-                    new_sentence = new_sentence.replace(char, openai_func(new_sentence, char, mapping_dict))
+                    new_sentence = new_sentence.replace(
+                        char, openai_func(new_sentence, char, mapping_dict, openai_client)
+                    )
         else:
             cc = OpenCC(opencc_config)
             cc_converted = cc.convert(new_sentence)
