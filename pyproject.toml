@@ -1,6 +1,6 @@
 [project]
 name = "mandarin-tamer"
-version = "0.0.6"
+version = "0.0.11"
 authors = [{ name = "Jon Knebel", email = "jonknebel@gmail.com" }]
 description = "MandarinTamer is a Python library for converting Mandarin text between Simplified Chinese and Traditional Chinese, with a focus on the Taiwanese variant. It's designed to be accurate, flexible, and easy to use."
 readme = "README.md"
@@ -10,6 +10,12 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 license = { text = "MIT" }
+dependencies = [
+    "openai>=1.60.0",
+    "opencc>=1.1.9",
+    "opencc-python-reimplemented>=0.1.7",
+    "pypinyin>=0.51.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/creolio/mandarinTamer"
@@ -20,8 +26,16 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["mandarin_tamer"]
 package-dir = { "" = "src" }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["mandarin_tamer*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+"mandarin_tamer" = ["conversion_dictionaries/**/*"]
 
 # MYPY
 [tool.mypy]
@@ -180,3 +194,20 @@ max-complexity = 7
 
 [tool.ruff.lint.pylint]
 max-args = 10
+
+[tool.bumpversion]
+current_version = "0.0.11"
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
+serialize = ["{major}.{minor}.{patch}"]
+search = "{current_version}"
+replace = "{new_version}"
+tag = true
+sign_tags = false
+commit = true
+message = "Bump version: {current_version} → {new_version}"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+
+[[tool.bumpversion.files]]
+filename = "src/mandarin_tamer/__init__.py"

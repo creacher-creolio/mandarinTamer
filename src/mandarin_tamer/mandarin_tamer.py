@@ -1,5 +1,6 @@
-"""src/mandarinTamer/mandarin_tamer.py - Core script conversion functionality"""
+"""src/mandarin_tamer/mandarin_tamer.py - Core script conversion functionality"""
 
+from .helpers import initialize_openai_client
 from .helpers.conversion_config import (
     CONVERSION_CONFIGS,
     SCRIPT_RESET_STEPS,
@@ -20,6 +21,7 @@ def convert_mandarin_script(
     ner_list: list | None = None,
     include_dicts: dict | None = None,
     exclude_lists: dict | None = None,
+    openai_key: str | None = None,
 ) -> str:
     """Convert text between different Chinese scripts."""
     converter = ScriptConverter(
@@ -32,6 +34,7 @@ def convert_mandarin_script(
         ner_list=ner_list,
         include_dicts=include_dicts,
         exclude_lists=exclude_lists,
+        openai_key=openai_key,
     )
     return converter.convert()
 
@@ -50,6 +53,7 @@ class ScriptConverter:
         ner_list: list | None = None,
         include_dicts: dict | None = None,
         exclude_lists: dict | None = None,
+        openai_key: str | None = None,
     ):
         self.loader = DictionaryLoader()
         self.include_dicts = include_dicts or {}
@@ -57,6 +61,8 @@ class ScriptConverter:
         self.dicts: dict[str, dict] = {}
         self.improved_one_to_many = improved_one_to_many
         self.sentence = sentence
+
+        self.openai_client = initialize_openai_client(openai_key, improved_one_to_many)
 
         # Get NER indexes if list provided
         self.ner_indexes = ReplacementUtils.get_ner_indexes(sentence, ner_list) if ner_list else []
@@ -79,7 +85,7 @@ class ScriptConverter:
             sentence, current_indexes = self.apply_conversion(
                 sentence,
                 CONVERSION_CONFIGS[config_name],
-                current_indexes or [],  # Ensure current_indexes is not None
+                current_indexes,  # current_indexes is already a list from __init__
             )
         return sentence
 
@@ -105,23 +111,22 @@ class ScriptConverter:
 
         # Apply phrase conversion if dictionary is not empty
         if dicts["phrase"] and any(dicts["phrase"].values()):
-            operation = ConversionOperation(new_sentence, phrase_indexes, config.name)
+            operation = ConversionOperation(new_sentence, phrase_indexes)
             new_sentence, phrase_indexes = operation.apply_phrase_conversion(dicts["phrase"])
 
         # Apply one-to-many conversion if available
         if dicts["one2many"] and (config.openai_func or config.opencc_config):
-            needs_conversion = any(char in dicts["one2many"] for char in new_sentence)
-            if needs_conversion:
-                operation = ConversionOperation(new_sentence, phrase_indexes, config.name)
-                new_sentence = operation.apply_one_to_many_conversion(
-                    dicts["one2many"],
-                    self.improved_one_to_many,
-                    config.openai_func if self.improved_one_to_many else None,
-                    config.opencc_config if not self.improved_one_to_many else None,
-                )
+            operation = ConversionOperation(new_sentence, phrase_indexes)
+            new_sentence = operation.apply_one_to_many_conversion(
+                dicts["one2many"],
+                self.improved_one_to_many,
+                config.openai_func if self.improved_one_to_many else None,
+                config.opencc_config if not self.improved_one_to_many else None,
+                self.openai_client if self.improved_one_to_many else None,
+            )
 
         # Apply character conversion
-        operation = ConversionOperation(new_sentence, phrase_indexes, config.name)
+        operation = ConversionOperation(new_sentence, phrase_indexes)
         return operation.apply_char_conversion(dicts["char"])
 
     def load_config(self, config: ConversionConfig) -> None:
