@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from conversion_dictionaries import DICT_ROOT
+from ..conversion_dictionaries import DICT_ROOT
 
 
 def json_to_dict(file_path):

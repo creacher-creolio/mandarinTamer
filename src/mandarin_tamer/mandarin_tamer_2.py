@@ -28,16 +28,16 @@ class MandarinConverter:
         self.client = initialize_openai_client(openai_key)
 
     def modernize_simplified(self, sentence):
-        return convert_text(sentence, simp2simp_modernize, "s2s", openai_modernize_simp_one2many_mappings, self.client)
+        return convert_text(sentence, simp2simp_modernize, "s2t", openai_modernize_simp_one2many_mappings, self.client)
 
     def modernize_traditional(self, sentence):
-        return convert_text(sentence, trad2trad_modernize, "t2t", openai_modernize_trad_one2many_mappings, self.client)
+        return convert_text(sentence, trad2trad_modernize, "t2s", openai_modernize_trad_one2many_mappings, self.client)
 
     def normalize_simplified(self, sentence):
-        return convert_text(sentence, simp2simp_normalize, "s2s", openai_normalize_simp_one2many_mappings, self.client)
+        return convert_text(sentence, simp2simp_normalize, "s2t", openai_normalize_simp_one2many_mappings, self.client)
 
     def normalize_traditional(self, sentence):
-        return convert_text(sentence, trad2trad_normalize, "t2t", openai_normalize_trad_one2many_mappings, self.client)
+        return convert_text(sentence, trad2trad_normalize, "t2s", openai_normalize_trad_one2many_mappings, self.client)
 
     def traditionalize(self, sentence):
         return convert_text(sentence, simp2trad, "s2twp", openai_s2t_one2many_mappings, self.client)
@@ -49,7 +49,7 @@ class MandarinConverter:
         return convert_text(sentence, trad2tw, "t2tw", openai_taiwanize_one2many_mappings, self.client)
 
     def detaiwanize(self, sentence):
-        return convert_text(sentence, tw2trad, "tw2t", openai_detaiwanize_one2many_mappings, self.client)
+        return convert_text(sentence, tw2trad, "tw2s", openai_detaiwanize_one2many_mappings, self.client)
 
     def convert_to_tw_trad(self, sentence, debug=False):
         """Complete conversion pipeline to Taiwan traditional Chinese"""
