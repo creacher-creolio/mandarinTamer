@@ -3,12 +3,10 @@ import json
 from openai import OpenAI
 
 
-def initialize_openai_client(openai_key: str | None, improved_one_to_many: bool):
-    """Initialize OpenAI client based on the presence of openai_key and improved_one_to_many flag."""
+def initialize_openai_client(openai_key: str | None):
+    """Initialize OpenAI client if an API key is provided."""
     if openai_key:
         return OpenAI(api_key=openai_key)
-    if improved_one_to_many:
-        return OpenAI()
     return None
 
 
@@ -103,7 +101,7 @@ def openai_detaiwanize_one2many_mappings(tokenized_sentence, token, mapping_dict
 def _one2many_mapping(prompt_intent, sentence_label, sentence, token, mapping_dict, client):
     system_context = f"""
     Return as json the best_replacement_token for the token in the sentence based on the options in the mapping_dictionary for {prompt_intent}.
-    """
+    """  # noqa: E501
     user_context = f"{sentence_label}: {sentence}; token: {token}; mapping_dictionary: {mapping_dict}"
     response = (
         get_openai_response(
