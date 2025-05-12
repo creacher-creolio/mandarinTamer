@@ -75,7 +75,7 @@ class MandarinConverter:
         ]
         return apply_conversion_chain(sentence, steps, debug)
 
-    def custom_transliteration(self, sentence, target_script="", debug=False):
+    def convert_script(self, sentence, target_script="", debug=False):
         """High-level conversion method based on target script"""
         if target_script == "to_tw_trad":
             return self.convert_to_tw_trad(sentence, debug)
