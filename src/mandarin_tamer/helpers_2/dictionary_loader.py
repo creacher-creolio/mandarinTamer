@@ -4,16 +4,16 @@ from pathlib import Path
 from conversion_dictionaries import DICT_ROOT
 
 
-def load_dictionary(subpath, filename):
-    """Load a dictionary from the specified subpath and filename"""
-    path = Path(DICT_ROOT) / subpath / filename
-    return json_to_dict(path)
-
-
 def json_to_dict(file_path):
     """Load a JSON file into a dictionary"""
     with Path(file_path).open() as file:
         return json.load(file)
+
+
+def load_dictionary(subpath, filename):
+    """Load a dictionary from the specified subpath and filename"""
+    path = Path(DICT_ROOT) / subpath / filename
+    return json_to_dict(path)
 
 
 def load_conversion_dictionaries(script_type, variant):
