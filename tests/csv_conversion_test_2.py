@@ -25,6 +25,7 @@ def convert_csv_sentences(input_file: str, output_dir: str, target_script: str =
     total_time: float = 0.0
     major_steps_total: dict[str, float] = defaultdict(float)
     minor_steps_timing: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    micro_steps_total: dict[str, float] = defaultdict(float)
 
     # Process each sentence
     for idx, row in df.iterrows():
@@ -51,6 +52,7 @@ def convert_csv_sentences(input_file: str, output_dir: str, target_script: str =
             # Accumulate minor step timings
             for sub_step, sub_time in step_details.items():
                 minor_steps_timing[step_name][sub_step] += sub_time
+                micro_steps_total[sub_step] += sub_time  # Track totals for each micro step
 
         # Append results
         results.append({"original": sentence, "converted": conversion_result["result"]})
@@ -67,6 +69,17 @@ def convert_csv_sentences(input_file: str, output_dir: str, target_script: str =
             for sub_step, sub_time in minor_steps_timing[major_step].items():
                 print(f"     {sub_time:.2f} sec - {sub_step}")
         print()
+
+    # Add a horizontal rule
+    print("-" * 50)
+    print("\n")
+
+    # Print micro step totals across all conversions
+    for micro_step, micro_time in micro_steps_total.items():
+        print(f"{micro_time:.2f} sec - TOTAL {micro_step}")
+
+    # Repeat total time
+    print(f"\n{total_time:.2f} sec - TOTAL TIME\n")
 
     # Save results to output file if needed
     output_path = Path(output_dir) / f"{Path(input_file).stem}_{target_script}_output.csv"
