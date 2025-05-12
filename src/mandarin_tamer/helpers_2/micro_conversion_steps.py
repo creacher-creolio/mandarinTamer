@@ -33,21 +33,20 @@ def one_to_many_conversion(sentence, mapping_dict, opencc_config, openai_functio
     cc = OpenCC(opencc_config)
     cc_converted_sentence = cc.convert(sentence)
 
-    def char_one2many_opencc(character):
-        if character in mapping_dict:
-            char_position = sentence.index(character)
-            return cc_converted_sentence[char_position]
-        return character
+    # Create a new string to build the result
+    result = list(sentence)
 
-    for char in sentence:
+    # Track characters that need conversion
+    for i, char in enumerate(sentence):
         if char in mapping_dict:
             if client and openai_function:
                 replacement = openai_function(sentence, char, mapping_dict, client)
-                sentence = sentence.replace(char, replacement)
+                result[i] = replacement
             else:
-                sentence = sentence.replace(char, char_one2many_opencc(char))
+                # Use the corresponding character from OpenCC's conversion at the same position
+                result[i] = cc_converted_sentence[i]
 
-    return sentence
+    return "".join(result)
 
 
 def character_conversion(sentence: str, one_to_one_dictionary: dict) -> str:
