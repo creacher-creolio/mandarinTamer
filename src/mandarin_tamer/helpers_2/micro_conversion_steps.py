@@ -1,18 +1,19 @@
-from openai import OpenAI
+from opencc import OpenCC
+
+
+def get_possible_sentence_phrases(sentence, max_phrase_length, sentence_length):
+    return sorted(
+        [
+            sentence[i : i + length]
+            for i in range(sentence_length)
+            for length in range(1, max_phrase_length + 1)
+            if i + length <= sentence_length
+        ],
+        key=lambda x: (-len(x), x),
+    )
 
 
 def phrase_conversion(sentence: str, phrase_dictionary: dict) -> str:
-    def get_possible_sentence_phrases(sentence, max_phrase_length, sentence_length):
-        return sorted(
-            [
-                sentence[i : i + length]
-                for i in range(sentence_length)
-                for length in range(1, max_phrase_length + 1)
-                if i + length <= sentence_length
-            ],
-            key=lambda x: (-len(x), x),
-        )
-
     max_phrase_length = 5
     sentence_length = len(sentence)
     possible_sentence_phrases = get_possible_sentence_phrases(sentence, max_phrase_length, sentence_length)
@@ -29,7 +30,7 @@ def one_to_many_conversion(sentence, mapping_dict, opencc_config, openai_functio
     if not mapping_dict:
         return sentence
 
-    cc = OpenAI(opencc_config)
+    cc = OpenCC(opencc_config)
     cc_converted_sentence = cc.convert(sentence)
 
     def char_one2many_opencc(character):
