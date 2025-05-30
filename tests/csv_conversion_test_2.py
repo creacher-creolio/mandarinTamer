@@ -14,6 +14,45 @@ from src.mandarin_tamer.mandarin_tamer_2 import MandarinConverter
 
 
 def convert_csv_sentences(input_file: str, output_dir: str, target_script: str = "zh_cn") -> None:
+    """
+    Convert all sentences in a CSV file without detailed timing (production mode)
+    """
+    # Read the input CSV file
+    df = pd.read_csv(input_file)
+
+    # Initialize converter with debug off
+    converter = MandarinConverter(debug=False)
+
+    # Prepare result containers
+    results = []
+    start_time = time.time()
+
+    # Process each sentence
+    for _, row in df.iterrows():
+        sentence = row["original_sentence"]
+
+        # Get conversion result without timing information
+        converted = converter.convert_script(sentence, target_script=target_script, debug=False)
+
+        # Append results
+        results.append({"original": sentence, "converted": converted})
+
+    # Calculate total time
+    total_time = time.time() - start_time
+
+    # Print timing information
+    print(f"{total_time:.2f} sec - TOTAL TIME (production mode)")
+
+    # Save results to output file if needed
+    output_path = Path(output_dir) / f"{Path(input_file).stem}_{target_script}_output.csv"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    results_df = pd.DataFrame(results)
+    results_df.to_csv(output_path, index=False)
+    print(f"Converted results saved to {output_path}")
+
+
+def debug_convert_csv_sentences(input_file: str, output_dir: str, target_script: str = "zh_cn") -> None:
     # Read the input CSV file
     df = pd.read_csv(input_file)
 
@@ -28,7 +67,7 @@ def convert_csv_sentences(input_file: str, output_dir: str, target_script: str =
     micro_steps_total: dict[str, float] = defaultdict(float)
 
     # Process each sentence
-    for idx, row in df.iterrows():
+    for _, row in df.iterrows():
         sentence = row["original_sentence"]
         start_time = time.time()
 
@@ -91,7 +130,32 @@ def convert_csv_sentences(input_file: str, output_dir: str, target_script: str =
 
 
 if __name__ == "__main__":
-    # input_csv = "tests/sentence_csvs/trad_tatoeba_sentences_sample.csv"
-    # convert_csv_sentences(input_csv, output_dir="tests/output", target_script="zh_cn")
+    """ TO TRADITIONAL """
+
+    # Compare debug vs. production mode
     input_csv = "tests/sentence_csvs/simp_tatoeba_sentences_sample.csv"
+
+    # Run debug mode
+    print("Running in DEBUG mode:")
+    debug_convert_csv_sentences(input_csv, output_dir="tests/output", target_script="to_tw_trad")
+
+    print("\n" + "=" * 60 + "\n")
+
+    # Run production mode
+    print("Running in PRODUCTION mode:")
     convert_csv_sentences(input_csv, output_dir="tests/output", target_script="to_tw_trad")
+
+    """ TO SIMPLIFIED """
+
+    # # Compare debug vs. production mode
+    # input_csv = "tests/sentence_csvs/trad_tatoeba_sentences_sample.csv"
+
+    # # Run debug mode
+    # print("Running in DEBUG mode:")
+    # debug_convert_csv_sentences(input_csv, output_dir="tests/output", target_script="zh_cn")
+
+    # print("\n" + "=" * 60 + "\n")
+
+    # # Run production mode
+    # print("Running in PRODUCTION mode:")
+    # convert_csv_sentences(input_csv, output_dir="tests/output", target_script="zh_cn")
