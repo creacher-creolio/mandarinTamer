@@ -5,7 +5,7 @@ from pathlib import Path
 class FileConversion:
     @staticmethod
     def json_to_dict(file_path) -> dict:
-        with Path(file_path).open() as file:
+        with Path(file_path).open(encoding="utf-8") as file:
             return json.load(file)
 
     @staticmethod
